@@ -5,11 +5,10 @@ Core MCP server generation logic.
 import os
 import keyword
 from typing import Dict, List, Any, Optional
-from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 
-def validate_project_name(name: str) -> bool:
+def validate_project_name(name: Optional[str]) -> bool:
     """
     Validate Python package name.
 
@@ -36,7 +35,7 @@ def validate_project_name(name: str) -> bool:
     return True
 
 
-def validate_tool_name(name: str) -> bool:
+def validate_tool_name(name: Optional[str]) -> bool:
     """
     Validate tool/function name.
 

@@ -2,7 +2,6 @@
 Tests for core generation logic.
 """
 
-import os
 import pytest
 from mcp_server_generator.generator import (
     validate_project_name,

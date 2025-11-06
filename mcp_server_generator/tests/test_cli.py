@@ -2,8 +2,6 @@
 Tests for CLI functionality.
 """
 
-import os
-import sys
 import pytest
 from mcp_server_generator.cli import load_tools_from_file
 

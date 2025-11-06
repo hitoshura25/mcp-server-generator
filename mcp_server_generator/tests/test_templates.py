@@ -3,7 +3,6 @@ Tests for template validation.
 """
 
 import py_compile
-import pytest
 from mcp_server_generator import generate_mcp_server, generate_tool_schema
 from jinja2 import Environment, FileSystemLoader
 
@@ -63,6 +62,7 @@ def test_generated_python_syntax(tmp_path):
         tools=[{"name": "test", "description": "Test", "parameters": []}],
         output_dir=str(tmp_path)
     )
+    assert result['success'] == True
 
     project_path = tmp_path / "syntax-test"
 
@@ -87,6 +87,7 @@ def test_generated_files_contain_project_info(tmp_path):
         tools=[{"name": "func", "description": "Function", "parameters": []}],
         output_dir=str(tmp_path)
     )
+    assert result['success'] == True
 
     project_path = tmp_path / "content-test"
 
