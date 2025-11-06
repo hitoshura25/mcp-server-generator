@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""
+CLI for {{ project_name }}.
+
+{{ description }}
+"""
+
+import sys
+import argparse
+from .generator import (
+    {% for tool in tools %}
+    {{ tool.name }},
+    {% endfor %}
+)
+
+
+def main():
+    """CLI entry point."""
+    parser = argparse.ArgumentParser(description='{{ description }}')
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+
+    {% for tool in tools %}
+    # {{ tool.name }} command
+    {{ tool.name }}_parser = subparsers.add_parser(
+        '{{ tool.name }}',
+        help='{{ tool.description }}'
+    )
+    {% for param in tool.parameters %}
+    {{ tool.name }}_parser.add_argument(
+        '--{{ param.name }}',
+        {% if param.type in ['string', 'str'] %}type=str,
+        {% elif param.type in ['number', 'int', 'integer'] %}type=int,
+        {% elif param.type in ['float'] %}type=float,
+        {% elif param.type in ['boolean', 'bool'] %}action='store_true',
+        {% else %}type=str,
+        {% endif %}{% if param.required %}required=True,
+        {% endif %}help='{{ param.description }}'
+    )
+    {% endfor %}
+
+    {% endfor %}
+
+    args = parser.parse_args()
+
+    if args.command is None:
+        parser.print_help()
+        return 1
+
+    try:
+        {% for tool in tools %}
+        if args.command == '{{ tool.name }}':
+            {% if tool.parameters %}
+            result = {{ tool.name }}(
+                {% for param in tool.parameters %}
+                {{ param.name }}=args.{{ param.name }}{{ ',' if not loop.last else '' }}
+                {% endfor %}
+            )
+            {% else %}
+            result = {{ tool.name }}()
+            {% endif %}
+            print(result)
+        {% endfor %}
+
+        return 0
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

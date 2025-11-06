@@ -1,0 +1,144 @@
+# MCP Server Usage Guide for {{ project_name }}
+
+## What is MCP?
+
+The Model Context Protocol (MCP) allows AI agents like Claude to interact with external tools and services. This package implements an MCP server that exposes {{ tools|length }} tool(s) to AI agents.
+
+## Configuration
+
+### Claude Desktop
+
+Add this to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "{{ package_name }}": {
+      "command": "mcp-{{ project_name }}"
+    }
+  }
+}
+```
+
+### Restart Claude Desktop
+
+After adding the configuration, restart Claude Desktop to load the MCP server.
+
+## Available Tools
+
+{% for tool in tools %}
+### {{ tool.name }}
+
+{{ tool.description }}
+
+**Parameters:**
+{% for param in tool.parameters %}
+- `{{ param.name }}` ({{ param.type }}{% if param.required %}, required{% endif %}): {{ param.description }}
+{% endfor %}
+
+**Example usage in Claude:**
+```
+Can you use {{ tool.name }} to...
+```
+
+{% endfor %}
+
+## Testing the Connection
+
+Once configured, you can ask Claude:
+
+```
+What MCP servers are available?
+```
+
+You should see `{{ package_name }}` in the list.
+
+## Troubleshooting
+
+### Server not appearing
+
+1. Check that the package is installed:
+   ```bash
+   which mcp-{{ project_name }}
+   ```
+
+2. Verify the config file syntax is valid JSON
+
+3. Check Claude Desktop logs:
+   - macOS: `~/Library/Logs/Claude/`
+   - Windows: `%APPDATA%\Claude\logs\`
+
+### Tool execution errors
+
+If tools fail to execute:
+
+1. Check that all required parameters are provided
+2. Verify your environment has necessary permissions
+3. Review the MCP server logs (stderr output)
+
+## Development
+
+### Running the MCP Server Manually
+
+```bash
+# Start the MCP server (stdio mode)
+mcp-{{ project_name }}
+
+# The server will wait for JSON-RPC requests on stdin
+```
+
+### Testing with Manual Requests
+
+You can test the server by sending JSON-RPC requests:
+
+```bash
+echo '{"method": "tools/list", "id": 1}' | mcp-{{ project_name }}
+```
+
+## Protocol Details
+
+This MCP server implements:
+- **Protocol**: JSON-RPC over stdio
+- **Methods**: 
+  - `tools/list` - List available tools
+  - `tools/call` - Execute a tool
+
+### Example Request/Response
+
+**Request:**
+```json
+{
+  "method": "tools/call",
+  "id": 1,
+  "params": {
+    "name": "{{ tools[0].name }}",
+    "arguments": {
+      {% for param in tools[0].parameters %}
+      "{{ param.name }}": "example_value"{% if not loop.last %},{% endif %}
+      {% endfor %}
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "content": [
+    {
+      "type": "text",
+      "text": "Result from tool execution"
+    }
+  ],
+  "isError": false
+}
+```
+
+## Further Reading
+
+- [MCP Documentation](https://modelcontextprotocol.io/)
+- [Claude Desktop MCP Guide](https://modelcontextprotocol.io/docs/tools/claude-desktop)

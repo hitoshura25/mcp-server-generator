@@ -1,0 +1,26 @@
+"""
+Tests for core business logic.
+"""
+
+import pytest
+from {{ package_name }}.generator import (
+    {% for tool in tools %}
+    {{ tool.name }},
+    {% endfor %}
+)
+
+{% for tool in tools %}
+
+def test_{{ tool.name }}():
+    """Test {{ tool.name }} function."""
+    result = {{ tool.name }}(
+        {% for param in tool.parameters %}
+        {{ param.name }}={% if param.type in ['string', 'str'] %}"test_value"{% elif param.type in ['number', 'int', 'integer'] %}42{% elif param.type in ['boolean', 'bool'] %}True{% else %}"test"{% endif %}{{ ',' if not loop.last else '' }}
+        {% endfor %}
+    )
+
+    assert isinstance(result, dict)
+    assert "success" in result
+    # TODO: Add more specific assertions when implementation is complete
+
+{% endfor %}

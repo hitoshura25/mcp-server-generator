@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include mcp_server_generator *.j2
+exclude MCP_SERVER_GENERATOR_IMPLEMENTATION_PLAN.md
+exclude MCP_SERVER_GENERATOR_PLAN.md
+global-exclude .DS_Store
+global-exclude __pycache__
+global-exclude *.pyc
+global-exclude *.pyo

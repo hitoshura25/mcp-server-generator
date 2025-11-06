@@ -1,0 +1,21 @@
+"""
+{{ project_name }}
+
+{{ description }}
+"""
+
+__version__ = "0.1.0"
+__author__ = "{{ author }}"
+__license__ = "{{ license }}"
+
+from .generator import (
+    {% for tool in tools %}
+    {{ tool.name }},
+    {% endfor %}
+)
+
+__all__ = [
+    {% for tool in tools %}
+    '{{ tool.name }}',
+    {% endfor %}
+]

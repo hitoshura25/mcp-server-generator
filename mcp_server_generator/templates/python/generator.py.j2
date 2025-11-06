@@ -1,0 +1,36 @@
+"""
+Core business logic for {{ project_name }}.
+
+{{ description }}
+"""
+
+from typing import Any, Dict
+
+{% for tool in tools %}
+
+def {{ tool.name }}(
+    {% for param in tool.parameters %}
+    {{ param.name }}: {% if param.type in ['string', 'str'] %}str{% elif param.type in ['number', 'int', 'integer'] %}int{% elif param.type in ['float'] %}float{% elif param.type in ['boolean', 'bool'] %}bool{% else %}Any{% endif %}{% if not param.required %} = None{% endif %}{{ ',' if not loop.last else '' }}
+    {% endfor %}
+) -> Dict[str, Any]:
+    """
+    {{ tool.description }}
+
+    Args:
+        {% for param in tool.parameters %}
+        {{ param.name }}: {{ param.description }}
+        {% endfor %}
+
+    Returns:
+        Result dictionary
+    """
+    # TODO: Implement {{ tool.name }} logic
+    return {
+        'success': True,
+        'message': 'TODO: Implement {{ tool.name }}',
+        {% for param in tool.parameters %}
+        '{{ param.name }}': {{ param.name }},
+        {% endfor %}
+    }
+
+{% endfor %}
