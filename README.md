@@ -203,7 +203,7 @@ pytest mcp_server_generator/tests/test_server.py -v
 
 - Python ≥3.8
 - Jinja2 ≥3.0
-- pypi-workflow-generator ≥0.2.0
+- pypi-workflow-generator ≥0.3.0
 
 ## Development
 
