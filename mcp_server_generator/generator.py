@@ -1,0 +1,312 @@
+"""
+Core MCP server generation logic.
+"""
+
+import os
+import keyword
+from typing import Dict, List, Any, Optional
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
+
+
+def validate_project_name(name: str) -> bool:
+    """
+    Validate Python package name.
+
+    Args:
+        name: Project name to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not name:
+        return False
+
+    # Convert to package name (hyphens to underscores)
+    package_name = name.replace('-', '_')
+
+    # Check valid Python identifier
+    if not package_name.isidentifier():
+        return False
+
+    # Check not a keyword
+    if keyword.iskeyword(package_name):
+        return False
+
+    return True
+
+
+def validate_tool_name(name: str) -> bool:
+    """
+    Validate tool/function name.
+
+    Args:
+        name: Tool name to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not name:
+        return False
+
+    # Must be valid Python identifier
+    if not name.isidentifier():
+        return False
+
+    # Cannot be a keyword
+    if keyword.iskeyword(name):
+        return False
+
+    return True
+
+
+def generate_tool_schema(tool_definition: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Generate MCP tool schema from simplified definition.
+
+    Args:
+        tool_definition: {
+            "name": "my_tool",
+            "description": "Does something",
+            "parameters": [
+                {
+                    "name": "param1",
+                    "type": "string",
+                    "description": "First parameter",
+                    "required": True
+                }
+            ]
+        }
+
+    Returns:
+        Full MCP tool schema with inputSchema
+    """
+    # Map JSON Schema types to ensure compatibility
+    TYPE_MAPPING = {
+        'string': 'string',
+        'str': 'string',
+        'number': 'number',
+        'int': 'number',
+        'integer': 'number',
+        'float': 'number',
+        'boolean': 'boolean',
+        'bool': 'boolean',
+        'array': 'array',
+        'list': 'array',
+        'object': 'object',
+        'dict': 'object',
+    }
+
+    schema = {
+        "name": tool_definition["name"],
+        "description": tool_definition.get("description", ""),
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+    }
+
+    for param in tool_definition.get("parameters", []):
+        param_type = TYPE_MAPPING.get(param["type"].lower(), "string")
+
+        schema["inputSchema"]["properties"][param["name"]] = {
+            "type": param_type,
+            "description": param.get("description", "")
+        }
+
+        if param.get("required", False):
+            schema["inputSchema"]["required"].append(param["name"])
+
+    return schema
+
+
+def sanitize_description(text: str) -> str:
+    """
+    Sanitize user input for use in templates.
+
+    Args:
+        text: Text to sanitize
+
+    Returns:
+        Sanitized text
+    """
+    # Remove any potential template injection characters
+    # but keep it readable for documentation
+    return text.replace('{', '{{').replace('}', '}}')
+
+
+def generate_mcp_server(
+    project_name: str,
+    description: str,
+    author: str,
+    author_email: str,
+    tools: List[Dict[str, Any]],
+    output_dir: Optional[str] = None,
+    python_version: str = "3.8",
+    license_type: str = "Apache-2.0",
+) -> Dict[str, Any]:
+    """
+    Generate a complete MCP server project.
+
+    Args:
+        project_name: Project name (e.g., "my-mcp-server")
+        description: Project description
+        author: Author name
+        author_email: Author email
+        tools: List of tool definitions
+        output_dir: Where to create project (default: current directory)
+        python_version: Python version for testing (default: "3.8")
+        license_type: License type (default: "Apache-2.0")
+
+    Returns:
+        {
+            "success": bool,
+            "project_path": str,
+            "files_created": List[str],
+            "message": str
+        }
+    """
+    # Validate inputs
+    if not validate_project_name(project_name):
+        raise ValueError(
+            f"Invalid project name: '{project_name}'. "
+            "Must be lowercase alphanumeric with hyphens/underscores, "
+            "and not a Python keyword.\n"
+            "Examples of valid names: 'my-mcp-server', 'calc_tools', 'api-wrapper'\n"
+            "Examples of invalid names: 'class', '123-server', 'my server', 'my.server'"
+        )
+
+    # Validate tool names
+    for tool in tools:
+        if not validate_tool_name(tool["name"]):
+            raise ValueError(
+                f"Invalid tool name: '{tool['name']}'. "
+                "Must be a valid Python identifier and not a keyword.\n"
+                "Examples of valid names: 'add_numbers', 'get_data', 'process_file'\n"
+                "Examples of invalid names: 'class', '123func', 'my-function', 'my function'"
+            )
+
+    if not tools:
+        raise ValueError("At least one tool must be defined.")
+
+    # Convert project name to package name
+    package_name = project_name.replace('-', '_')
+
+    # Determine output directory
+    if output_dir is None:
+        output_dir = os.getcwd()
+
+    project_path = os.path.join(output_dir, project_name)
+
+    # Check if directory exists
+    if os.path.exists(project_path):
+        raise FileExistsError(
+            f"Directory already exists: {project_path}\n"
+            f"Solutions:\n"
+            f"  1. Choose a different project name\n"
+            f"  2. Remove the existing directory: rm -rf {project_path}\n"
+            f"  3. Specify a different output directory with --output-dir"
+        )
+
+    # Get template directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(script_dir, 'templates', 'python')
+
+    if not os.path.exists(template_dir):
+        raise FileNotFoundError(f"Templates not found at {template_dir}")
+
+    # Prepare template context
+    context = {
+        'project_name': project_name,
+        'package_name': package_name,
+        'description': sanitize_description(description),
+        'author': author,
+        'author_email': author_email,
+        'python_version': python_version,
+        'license': license_type,
+        'tools': tools,
+        'tool_schemas': [generate_tool_schema(tool) for tool in tools],
+        'year': '2025',
+    }
+
+    # Set up Jinja2 environment
+    env = Environment(loader=FileSystemLoader(template_dir))
+
+    # Files to generate
+    files_to_generate = [
+        # Root files
+        ('README.md.j2', 'README.md'),
+        ('MCP-USAGE.md.j2', 'MCP-USAGE.md'),
+        ('LICENSE.j2', 'LICENSE'),
+        ('setup.py.j2', 'setup.py'),
+        ('pyproject.toml.j2', 'pyproject.toml'),
+        ('requirements.txt.j2', 'requirements.txt'),
+        ('MANIFEST.in.j2', 'MANIFEST.in'),
+        ('.gitignore.j2', '.gitignore'),
+
+        # Package files
+        ('__init__.py.j2', f'{package_name}/__init__.py'),
+        ('server.py.j2', f'{package_name}/server.py'),
+        ('cli.py.j2', f'{package_name}/cli.py'),
+        ('generator.py.j2', f'{package_name}/generator.py'),
+
+        # Tests
+        ('tests/__init__.py.j2', f'{package_name}/tests/__init__.py'),
+        ('tests/test_server.py.j2', f'{package_name}/tests/test_server.py'),
+        ('tests/test_generator.py.j2', f'{package_name}/tests/test_generator.py'),
+    ]
+
+    files_created = []
+
+    # Generate files
+    for template_file, output_file in files_to_generate:
+        try:
+            template = env.get_template(template_file)
+            content = template.render(**context)
+
+            output_path = os.path.join(project_path, output_file)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            files_created.append(output_file)
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate {output_file}: {str(e)}")
+
+    # Generate GitHub Actions workflow (required)
+    try:
+        from pypi_workflow_generator import generate_workflows
+
+        # Change to project directory
+        original_dir = os.getcwd()
+        os.chdir(project_path)
+
+        try:
+            workflow_result = generate_workflows(
+                python_version=python_version,
+                test_path=package_name,
+            )
+
+            # In 0.3.0+, generate_workflows creates 3 workflows and 1 script
+            if workflow_result['success']:
+                files_created.append('.github/workflows/_reusable-test-build.yml')
+                files_created.append('.github/workflows/release.yml')
+                files_created.append('.github/workflows/test-pr.yml')
+                files_created.append('scripts/calculate_version.sh')
+        finally:
+            os.chdir(original_dir)
+
+    except ImportError:
+        raise ImportError(
+            "pypi-workflow-generator is required but not installed. "
+            "Install with: pip install pypi-workflow-generator"
+        )
+
+    return {
+        'success': True,
+        'project_path': project_path,
+        'files_created': files_created,
+        'message': f"Successfully generated MCP server project at {project_path}"
+    }

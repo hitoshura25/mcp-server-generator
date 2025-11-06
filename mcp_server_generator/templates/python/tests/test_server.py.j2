@@ -1,0 +1,113 @@
+"""
+Tests for MCP server implementation.
+"""
+
+import json
+import pytest
+from {{ package_name }}.server import MCPServer
+
+
+@pytest.mark.asyncio
+async def test_handle_list_tools():
+    """Test that tools/list returns all available tools."""
+    server = MCPServer()
+    response = await server.handle_list_tools()
+
+    assert "tools" in response
+    assert len(response["tools"]) == {{ tools|length }}
+
+    {% for tool in tools %}
+    # Check for {{ tool.name }}
+    tool_names = [tool["name"] for tool in response["tools"]]
+    assert "{{ tool.name }}" in tool_names
+    {% endfor %}
+
+
+@pytest.mark.asyncio
+async def test_handle_call_tool_success():
+    """Test successful tool execution."""
+    server = MCPServer()
+
+    # Test first tool
+    response = await server.handle_call_tool(
+        "{{ tools[0].name }}",
+        {
+            {% for param in tools[0].parameters %}
+            "{{ param.name }}": {% if param.type in ['string', 'str'] %}"test_value"{% elif param.type in ['number', 'int', 'integer'] %}42{% elif param.type in ['boolean', 'bool'] %}True{% else %}"test"{% endif %}{{ ',' if not loop.last else '' }}
+            {% endfor %}
+        }
+    )
+
+    assert "content" in response
+    assert isinstance(response["content"], list)
+    assert response["isError"] == False
+
+
+@pytest.mark.asyncio
+async def test_handle_call_tool_unknown():
+    """Test calling an unknown tool."""
+    server = MCPServer()
+
+    response = await server.handle_call_tool(
+        "unknown_tool",
+        {}
+    )
+
+    assert response["isError"] == True
+    assert "Unknown tool" in response["content"][0]["text"]
+
+
+@pytest.mark.asyncio
+async def test_handle_request_tools_list():
+    """Test handling tools/list request."""
+    server = MCPServer()
+
+    request = {
+        "method": "tools/list",
+        "id": 1
+    }
+
+    response = await server.handle_request(request)
+
+    assert "tools" in response
+    assert "error" not in response
+
+
+@pytest.mark.asyncio
+async def test_handle_request_tools_call():
+    """Test handling tools/call request."""
+    server = MCPServer()
+
+    request = {
+        "method": "tools/call",
+        "id": 2,
+        "params": {
+            "name": "{{ tools[0].name }}",
+            "arguments": {
+                {% for param in tools[0].parameters %}
+                "{{ param.name }}": {% if param.type in ['string', 'str'] %}"test"{% elif param.type in ['number', 'int', 'integer'] %}1{% elif param.type in ['boolean', 'bool'] %}True{% else %}"test"{% endif %}{{ ',' if not loop.last else '' }}
+                {% endfor %}
+            }
+        }
+    }
+
+    response = await server.handle_request(request)
+
+    assert "content" in response
+    assert "error" not in response
+
+
+@pytest.mark.asyncio
+async def test_handle_request_unknown_method():
+    """Test handling unknown method."""
+    server = MCPServer()
+
+    request = {
+        "method": "unknown/method",
+        "id": 3
+    }
+
+    response = await server.handle_request(request)
+
+    assert "error" in response
+    assert response["error"]["code"] == -32601
