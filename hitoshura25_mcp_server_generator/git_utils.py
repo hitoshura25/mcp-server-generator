@@ -6,8 +6,10 @@ configuration and applying prefixes to package names to avoid PyPI namespace
 conflicts.
 """
 
+from __future__ import annotations
+
 import subprocess
-from typing import Optional, Tuple
+from typing import Optional
 import re
 
 
@@ -39,6 +41,7 @@ def get_github_username() -> Optional[str]:
         username = result.stdout.strip()
         if username:
             return username
+    # Gracefully handle missing git configuration - try next method
     except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
@@ -58,6 +61,7 @@ def get_github_username() -> Optional[str]:
         match = re.search(r'github\.com[:/]([^/]+)/', url)
         if match:
             return match.group(1)
+    # Gracefully handle missing git remote or configuration - try next method
     except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
@@ -73,6 +77,7 @@ def get_github_username() -> Optional[str]:
         name = result.stdout.strip()
         if name:
             return sanitize_username(name)
+    # Gracefully handle missing git configuration - all methods exhausted
     except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
@@ -121,7 +126,7 @@ def sanitize_username(name: str) -> str:
 def apply_prefix(
     base_name: str,
     prefix: str = "AUTO"
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Apply prefix to package name.
 

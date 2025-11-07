@@ -1,6 +1,5 @@
 """Tests for git username detection and prefix application."""
 
-import pytest
 from unittest.mock import patch, MagicMock
 import subprocess
 from hitoshura25_mcp_server_generator.git_utils import (
@@ -127,7 +126,7 @@ class TestSanitizeUsername:
         """Test multiple transformations together."""
         assert sanitize_username('John Q. Smith Jr.') == 'john-q-smith-jr'
         assert sanitize_username('  John  Smith  ') == 'john-smith'
-        assert sanitize_username('john@example.com') == 'johnexample-com'  # Dot becomes hyphen
+        assert sanitize_username('john@example.com') == 'johnexample-com'  # Dot → hyphen, @ removed
 
     def test_already_sanitized(self):
         """Test already sanitized names."""

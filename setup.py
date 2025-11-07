@@ -44,8 +44,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'mcp-server-generator=hitoshura25_mcp_server_generator.server:main',
-            'mcp-server-generator-cli=hitoshura25_mcp_server_generator.cli:main',
+            'hitoshura25-mcp-server-generator=hitoshura25_mcp_server_generator.server:main',
+            'hitoshura25-mcp-server-generator-cli=hitoshura25_mcp_server_generator.cli:main',
         ],
     },
 )

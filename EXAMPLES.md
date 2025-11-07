@@ -120,7 +120,7 @@ This document provides realistic examples of MCP servers you can generate with m
 ### Generate the Server
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name calc-tools \
   --description "Mathematical calculation tools for AI agents" \
   --author "Your Name" \
@@ -255,7 +255,7 @@ def divide(x: float, y: float) -> float:
 ### Generate the Server
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name file-ops \
   --description "Safe file system operations for AI agents" \
   --author "Your Name" \
@@ -373,7 +373,7 @@ When implementing, add path validation:
 ### Generate the Server
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name text-tools \
   --description "Text processing and transformation tools" \
   --author "Your Name" \
@@ -447,7 +447,7 @@ mcp-server-generator-cli \
 ### Generate the Server
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name weather-api \
   --description "Weather API client for AI agents" \
   --author "Your Name" \
@@ -543,7 +543,7 @@ def get_weather(location: str, units: str = "metric") -> dict:
 ### Generate the Server
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name db-query-tools \
   --description "Safe database query tools for AI agents" \
   --author "Your Name" \
@@ -616,7 +616,7 @@ mcp-server-generator-cli \
 ### Generate the Server
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name system-info \
   --description "System information tools for monitoring" \
   --author "Your Name" \
@@ -647,19 +647,19 @@ To avoid PyPI namespace conflicts, use a package prefix:
 **AUTO (Recommended)**: Automatically detects your GitHub username
 ```bash
 # Just add --prefix AUTO (or omit it, as AUTO is the default)
-mcp-server-generator-cli --project-name calculator --prefix AUTO ...
+hitoshura25-mcp-server-generator-cli --project-name calculator --prefix AUTO ...
 ```
 
 **Custom Prefix**: Use your own prefix
 ```bash
 # Use your organization or brand name
-mcp-server-generator-cli --project-name calculator --prefix acme ...
+hitoshura25-mcp-server-generator-cli --project-name calculator --prefix acme ...
 # Generates: acme-calculator
 ```
 
 **NONE**: No prefix (only if you have a truly unique name)
 ```bash
-mcp-server-generator-cli --project-name unique-tool-name --prefix NONE ...
+hitoshura25-mcp-server-generator-cli --project-name unique-tool-name --prefix NONE ...
 ```
 
 ### 3. Generate the Project

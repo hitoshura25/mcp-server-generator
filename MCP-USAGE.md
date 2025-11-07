@@ -11,14 +11,14 @@ The Model Context Protocol (MCP) is a standard protocol for AI agents to interac
 First, ensure mcp-server-generator is installed:
 
 ```bash
-pip install mcp-server-generator
+pip install hitoshura25-mcp-server-generator
 ```
 
 Verify the installation:
 
 ```bash
-which mcp-server-generator
-# Should output: /path/to/your/venv/bin/mcp-server-generator (or similar)
+which hitoshura25-mcp-server-generator
+# Should output: /path/to/your/venv/bin/hitoshura25-mcp-server-generator (or similar)
 ```
 
 ## Claude Desktop Configuration
@@ -37,7 +37,7 @@ which mcp-server-generator
    {
      "mcpServers": {
        "mcp-server-generator": {
-         "command": "mcp-server-generator"
+         "command": "hitoshura25-mcp-server-generator"
        }
      }
    }
@@ -49,7 +49,7 @@ which mcp-server-generator
    {
      "mcpServers": {
        "mcp-server-generator": {
-         "command": "/absolute/path/to/venv/bin/mcp-server-generator"
+         "command": "/absolute/path/to/venv/bin/hitoshura25-mcp-server-generator"
        }
      }
    }
@@ -71,7 +71,7 @@ which mcp-server-generator
    {
      "mcpServers": {
        "mcp-server-generator": {
-         "command": "mcp-server-generator.exe"
+         "command": "hitoshura25-mcp-server-generator.exe"
        }
      }
    }
@@ -83,7 +83,7 @@ which mcp-server-generator
    {
      "mcpServers": {
        "mcp-server-generator": {
-         "command": "C:\\path\\to\\venv\\Scripts\\mcp-server-generator.exe"
+         "command": "C:\\path\\to\\venv\\Scripts\\hitoshura25-mcp-server-generator.exe"
        }
      }
    }
@@ -105,7 +105,7 @@ which mcp-server-generator
    {
      "mcpServers": {
        "mcp-server-generator": {
-         "command": "mcp-server-generator"
+         "command": "hitoshura25-mcp-server-generator"
        }
      }
    }

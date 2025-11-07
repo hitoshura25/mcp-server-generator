@@ -57,7 +57,7 @@ pip install -e .
 The easiest way to get started:
 
 ```bash
-mcp-server-generator-cli --interactive
+hitoshura25-mcp-server-generator-cli --interactive
 ```
 
 This will guide you through:
@@ -71,7 +71,7 @@ This will guide you through:
 For automation or when you have a tool definition file:
 
 ```bash
-mcp-server-generator-cli \
+hitoshura25-mcp-server-generator-cli \
   --project-name my-mcp-tool \
   --description "Does something useful" \
   --author "Your Name" \
@@ -87,7 +87,7 @@ Configure mcp-server-generator as an MCP server in Claude Desktop to let Claude 
 {
   "mcpServers": {
     "mcp-server-generator": {
-      "command": "mcp-server-generator"
+      "command": "hitoshura25-mcp-server-generator"
     }
   }
 }
@@ -118,7 +118,7 @@ To avoid namespace conflicts on PyPI, mcp-server-generator supports prefixing pa
 
 **Interactive Mode:**
 ```bash
-mcp-server-generator-cli --interactive
+hitoshura25-mcp-server-generator-cli --interactive
 # You'll be prompted: "Prefix (default: AUTO): "
 # - Press Enter for AUTO detection
 # - Type "NONE" for no prefix
@@ -128,13 +128,13 @@ mcp-server-generator-cli --interactive
 **Command-Line:**
 ```bash
 # AUTO mode (default)
-mcp-server-generator-cli --project-name calculator --prefix AUTO ...
+hitoshura25-mcp-server-generator-cli --project-name calculator --prefix AUTO ...
 
 # Custom prefix
-mcp-server-generator-cli --project-name calculator --prefix acme ...
+hitoshura25-mcp-server-generator-cli --project-name calculator --prefix acme ...
 
 # No prefix
-mcp-server-generator-cli --project-name unique-calculator --prefix NONE ...
+hitoshura25-mcp-server-generator-cli --project-name unique-calculator --prefix NONE ...
 ```
 
 **MCP Server Mode:**
