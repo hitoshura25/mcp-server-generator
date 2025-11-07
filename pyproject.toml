@@ -31,6 +31,10 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.scripts]
+hitoshura25-mcp-server-generator = "hitoshura25_mcp_server_generator.server:main"
+hitoshura25-mcp-server-generator-cli = "hitoshura25_mcp_server_generator.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/hitoshura25/mcp-server-generator"
 Repository = "https://github.com/hitoshura25/mcp-server-generator"

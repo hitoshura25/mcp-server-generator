@@ -35,13 +35,47 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 
 ## Installation
 
-### From PyPI
+### For MCP Server Usage (Recommended)
+
+**Using uvx (no installation required):**
+
+The easiest way to use this as an MCP server - just configure in Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "mcp-server-generator": {
+      "command": "uvx",
+      "args": ["hitoshura25-mcp-server-generator"]
+    }
+  }
+}
+```
+
+**Prerequisites:** Install [uv](https://docs.astral.sh/uv/):
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### For CLI Usage (Alternative)
+
+**Using pipx (isolated installation):**
+
+```bash
+pipx install hitoshura25-mcp-server-generator
+```
+
+**Using pip:**
 
 ```bash
 pip install hitoshura25-mcp-server-generator
 ```
 
-### From Source
+### From Source (Development)
 
 ```bash
 git clone https://github.com/hitoshura25/mcp-server-generator.git
@@ -82,6 +116,19 @@ hitoshura25-mcp-server-generator-cli \
 
 Configure mcp-server-generator as an MCP server in Claude Desktop to let Claude generate MCP servers for you:
 
+**Using uvx (recommended):**
+```json
+{
+  "mcpServers": {
+    "mcp-server-generator": {
+      "command": "uvx",
+      "args": ["hitoshura25-mcp-server-generator"]
+    }
+  }
+}
+```
+
+**Using pipx/pip installation:**
 ```json
 {
   "mcpServers": {
@@ -305,8 +352,8 @@ mcp-server-generator follows a dual-mode architecture pattern:
 │       └────────┬────────┘           │
 │                │                    │
 │         ┌──────▼───────┐            │
-│         │  generator.py │           │
-│         │  (Core Logic) │           │
+│         │ generator.py │            │
+│         │ (Core Logic) │            │
 │         └──────────────┘            │
 │                                     │
 └─────────────────────────────────────┘

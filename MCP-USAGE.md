@@ -8,7 +8,28 @@ The Model Context Protocol (MCP) is a standard protocol for AI agents to interac
 
 ## Installation
 
-First, ensure mcp-server-generator is installed:
+### Recommended: uvx (No installation required)
+
+The easiest method - uvx automatically handles installation in an isolated environment:
+
+**Prerequisites:** Install [uv](https://docs.astral.sh/uv/):
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+No further installation needed - uvx will handle it automatically when configured.
+
+### Alternative: pipx (Isolated installation)
+
+```bash
+pipx install hitoshura25-mcp-server-generator
+```
+
+### Alternative: pip (Global installation)
 
 ```bash
 pip install hitoshura25-mcp-server-generator
@@ -18,7 +39,8 @@ Verify the installation:
 
 ```bash
 which hitoshura25-mcp-server-generator
-# Should output: /path/to/your/venv/bin/hitoshura25-mcp-server-generator (or similar)
+# Should output: ~/.local/bin/hitoshura25-mcp-server-generator (pipx)
+# Or: /path/to/venv/bin/hitoshura25-mcp-server-generator (pip)
 ```
 
 ## Claude Desktop Configuration
@@ -31,7 +53,20 @@ which hitoshura25-mcp-server-generator
    ~/Library/Application Support/Claude/claude_desktop_config.json
    ```
 
-2. **Add mcp-server-generator to the configuration:**
+2. **Add mcp-server-generator (recommended - using uvx):**
+
+   ```json
+   {
+     "mcpServers": {
+       "mcp-server-generator": {
+         "command": "uvx",
+         "args": ["hitoshura25-mcp-server-generator"]
+       }
+     }
+   }
+   ```
+
+3. **Alternative - if using pipx/pip installation:**
 
    ```json
    {
@@ -43,7 +78,7 @@ which hitoshura25-mcp-server-generator
    }
    ```
 
-3. **If using a virtual environment:**
+4. **If using pip in a virtual environment:**
 
    ```json
    {
@@ -55,7 +90,7 @@ which hitoshura25-mcp-server-generator
    }
    ```
 
-4. **Restart Claude Desktop** to load the new configuration.
+5. **Restart Claude Desktop** to load the new configuration.
 
 ### Windows Configuration
 
@@ -65,7 +100,20 @@ which hitoshura25-mcp-server-generator
    %APPDATA%\Claude\claude_desktop_config.json
    ```
 
-2. **Add mcp-server-generator:**
+2. **Add mcp-server-generator (recommended - using uvx):**
+
+   ```json
+   {
+     "mcpServers": {
+       "mcp-server-generator": {
+         "command": "uvx",
+         "args": ["hitoshura25-mcp-server-generator"]
+       }
+     }
+   }
+   ```
+
+3. **Alternative - if using pipx/pip installation:**
 
    ```json
    {
@@ -77,7 +125,7 @@ which hitoshura25-mcp-server-generator
    }
    ```
 
-3. **If using a virtual environment:**
+4. **If using pip in a virtual environment:**
 
    ```json
    {
@@ -89,7 +137,7 @@ which hitoshura25-mcp-server-generator
    }
    ```
 
-4. **Restart Claude Desktop**.
+5. **Restart Claude Desktop**.
 
 ### Linux Configuration
 
@@ -99,7 +147,20 @@ which hitoshura25-mcp-server-generator
    ~/.config/Claude/claude_desktop_config.json
    ```
 
-2. **Add mcp-server-generator:**
+2. **Add mcp-server-generator (recommended - using uvx):**
+
+   ```json
+   {
+     "mcpServers": {
+       "mcp-server-generator": {
+         "command": "uvx",
+         "args": ["hitoshura25-mcp-server-generator"]
+       }
+     }
+   }
+   ```
+
+3. **Alternative - if using pipx/pip installation:**
 
    ```json
    {
@@ -111,7 +172,7 @@ which hitoshura25-mcp-server-generator
    }
    ```
 
-3. **Restart Claude Desktop**.
+4. **Restart Claude Desktop**.
 
 ## Available Tools
 

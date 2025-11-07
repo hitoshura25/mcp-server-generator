@@ -30,6 +30,10 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.scripts]
+{{ project_name }} = "{{ package_name }}.server:main"
+{{ project_name }}-cli = "{{ package_name }}.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/{{ author }}/{{ project_name }}"
 Repository = "https://github.com/{{ author }}/{{ project_name }}"
