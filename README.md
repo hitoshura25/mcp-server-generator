@@ -351,10 +351,10 @@ mcp-server-generator follows a dual-mode architecture pattern:
 │       │                 │           │
 │       └────────┬────────┘           │
 │                │                    │
-│         ┌──────▼─────── ┐           │
-│         │  generator.py │           │
-│         │  (Core Logic) │           │
-│         └────────────── ┘           │
+│         ┌──────▼───────┐            │
+│         │ generator.py │            │
+│         │ (Core Logic) │            │
+│         └──────────────┘            │
 │                                     │
 └─────────────────────────────────────┘
 ```
