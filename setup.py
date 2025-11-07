@@ -16,7 +16,7 @@ except FileNotFoundError:
 
 
 setup(
-    name='mcp-server-generator',
+    name='hitoshura25-mcp-server-generator',
     author='Vinayak Menon',
     author_email='vinayakmenon+pypi@users.noreply.github.com',
     description='Generate dual-mode MCP servers with best practices',
@@ -28,7 +28,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'Jinja2>=3.0',
-        'pypi-workflow-generator>=0.3.0',
+        'hitoshura25-pypi-workflow-generator>=0.3.1',
     ],
     python_requires='>=3.8',
     classifiers=[
@@ -44,8 +44,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'mcp-server-generator=mcp_server_generator.server:main',
-            'mcp-server-generator-cli=mcp_server_generator.cli:main',
+            'hitoshura25-mcp-server-generator=hitoshura25_mcp_server_generator.server:main',
+            'hitoshura25-mcp-server-generator-cli=hitoshura25_mcp_server_generator.cli:main',
         ],
     },
 )

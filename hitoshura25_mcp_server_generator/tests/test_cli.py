@@ -3,7 +3,7 @@ Tests for CLI functionality.
 """
 
 import pytest
-from mcp_server_generator.cli import load_tools_from_file
+from hitoshura25_mcp_server_generator.cli import load_tools_from_file
 
 
 def test_load_tools_from_json(tmp_path):
@@ -58,7 +58,7 @@ def test_load_tools_from_file_invalid_format(tmp_path):
 
 def test_cli_main_with_all_args(tmp_path, monkeypatch):
     """Test CLI main with all required arguments."""
-    from mcp_server_generator.cli import main
+    from hitoshura25_mcp_server_generator.cli import main
 
     tools_file = tmp_path / "tools.json"
     tools_file.write_text('{"tools": [{"name": "test", "description": "Test", "parameters": []}]}')
@@ -71,7 +71,8 @@ def test_cli_main_with_all_args(tmp_path, monkeypatch):
         '--author', 'Test',
         '--email', 'test@test.com',
         '--tools-file', str(tools_file),
-        '--output-dir', str(tmp_path)
+        '--output-dir', str(tmp_path),
+        '--prefix', 'NONE'
     ]
     monkeypatch.setattr('sys.argv', test_args)
 
@@ -84,7 +85,7 @@ def test_cli_main_with_all_args(tmp_path, monkeypatch):
 
 def test_cli_main_missing_args(monkeypatch):
     """Test that CLI fails with missing required arguments."""
-    from mcp_server_generator.cli import main
+    from hitoshura25_mcp_server_generator.cli import main
 
     # Only provide program name
     monkeypatch.setattr('sys.argv', ['mcp-server-generator-cli'])
@@ -96,7 +97,7 @@ def test_cli_main_missing_args(monkeypatch):
 
 def test_cli_imports():
     """Test that CLI can be imported successfully."""
-    from mcp_server_generator.cli import main, load_tools_from_file, interactive_mode
+    from hitoshura25_mcp_server_generator.cli import main, load_tools_from_file, interactive_mode
 
     assert main is not None
     assert load_tools_from_file is not None

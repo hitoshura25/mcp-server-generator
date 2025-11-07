@@ -4,7 +4,7 @@ Tests for MCP server functionality.
 
 import json
 import pytest
-from mcp_server_generator.server import MCPServer
+from hitoshura25_mcp_server_generator.server import MCPServer
 
 
 @pytest.mark.asyncio
@@ -70,7 +70,8 @@ async def test_call_tool_generate_mcp_server(tmp_path):
                     "parameters": []
                 }
             ],
-            "output_dir": str(tmp_path)
+            "output_dir": str(tmp_path),
+            "prefix": "NONE"
         }
     )
 
@@ -97,7 +98,8 @@ async def test_call_tool_generate_mcp_server_with_options(tmp_path):
             "author_email": "test@test.com",
             "tools": [{"name": "func", "description": "Function", "parameters": []}],
             "output_dir": str(tmp_path),
-            "python_version": "3.11"
+            "python_version": "3.11",
+            "prefix": "NONE"
         }
     )
 
@@ -228,7 +230,7 @@ async def test_handle_request_call_tool():
 
 def test_mcp_server_imports():
     """Test that MCP server can be imported successfully."""
-    from mcp_server_generator.server import MCPServer, main
+    from hitoshura25_mcp_server_generator.server import MCPServer, main
 
     assert MCPServer is not None
     assert main is not None
