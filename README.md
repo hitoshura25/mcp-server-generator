@@ -4,7 +4,6 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Test Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](./PHASE_4_TEST_PLAN.md)
 
 ## Overview
 
@@ -18,7 +17,7 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 
 - ⚡ **Fast**: Generate a complete MCP server in under 5 minutes
 - 🏗️ **Complete**: Includes tests, documentation, packaging, and CI/CD
-- ✅ **Tested**: Generated servers have 82% test coverage with comprehensive test suites
+- ✅ **Tested**: Generated servers have comprehensive test suites with high coverage
 - 🎯 **Best Practices**: Follows validated patterns from production MCP servers
 - 🔧 **Dual-Mode**: Works as both MCP server and CLI tool
 - 📦 **Ready to Publish**: GitHub Actions workflows included for PyPI publishing
@@ -29,7 +28,7 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 - ✅ **Package prefix support** (avoid PyPI namespace conflicts with AUTO detection)
 - ✅ **Complete project scaffolding** (tests, docs, packaging)
 - ✅ **GitHub Actions workflows** (via pypi-workflow-generator)
-- ✅ **Comprehensive test suite** (82% coverage with 27+ tests)
+- ✅ **Comprehensive test suite** (27+ tests with high coverage)
 - ✅ **Type hints and documentation**
 - ✅ **Best practices enforcement**
 - ✅ **Minimal dependencies**
@@ -39,7 +38,7 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 ### From PyPI
 
 ```bash
-pip install mcp-server-generator
+pip install hitoshura25-mcp-server-generator
 ```
 
 ### From Source
@@ -93,7 +92,7 @@ Configure mcp-server-generator as an MCP server in Claude Desktop to let Claude 
 }
 ```
 
-**For detailed MCP configuration, see [MCP-USAGE.md](./MCP-USAGE.md)**
+**For detailed MCP configuration, see [MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)**
 
 ## Package Prefix
 
@@ -154,7 +153,7 @@ With prefix `username` and project `my-tool`:
 - **CLI Command**: `username-my-tool` (run as `username-my-tool --help`)
 - **MCP Command**: `mcp-username-my-tool` (use in config)
 
-**For detailed MCP configuration, see [MCP-USAGE.md](./MCP-USAGE.md)**
+**For detailed MCP configuration, see [MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)**
 
 ## What Gets Generated
 
@@ -231,33 +230,31 @@ Create a `tools.json` file to define your MCP server's tools:
 - `array` / `list`
 - `object` / `dict`
 
-**For complete examples, see [EXAMPLES.md](./EXAMPLES.md)**
+**For complete examples, see [EXAMPLES.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/EXAMPLES.md)**
 
 ## Documentation
 
-- **[MCP-USAGE.md](./MCP-USAGE.md)** - Detailed MCP server configuration guide
-- **[EXAMPLES.md](./EXAMPLES.md)** - Example projects and use cases
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Development and contribution guidelines
-- **[PHASE_4_TEST_PLAN.md](./PHASE_4_TEST_PLAN.md)** - Test specifications and coverage
+- **[MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)** - Detailed MCP server configuration guide
+- **[EXAMPLES.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/EXAMPLES.md)** - Example projects and use cases
+- **[CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md)** - Development and contribution guidelines
 
 ## Testing
 
-The project includes a comprehensive test suite with 82% coverage:
+The project includes a comprehensive test suite:
 
 ```bash
 # Run all tests
 pytest
 
 # Run with coverage report
-pytest --cov=mcp_server_generator --cov-report=term-missing
+pytest --cov=hitoshura25_mcp_server_generator --cov-report=term-missing
 
 # Run specific test file
-pytest mcp_server_generator/tests/test_server.py -v
+pytest hitoshura25_mcp_server_generator/tests/test_server.py -v
 ```
 
 **Test Statistics:**
-- Total tests: 34 (exceeds target of 27+)
-- Coverage: 82%
+- 27+ comprehensive tests covering all functionality
 - All async MCP protocol tests passing
 - Template validation tests passing
 
@@ -269,7 +266,7 @@ pytest mcp_server_generator/tests/test_server.py -v
 
 ## Development
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed development instructions.
+See [CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md) for detailed development instructions.
 
 Quick setup:
 
@@ -327,7 +324,7 @@ Vinayak Menon
 
 ## Links
 
-- **PyPI**: https://pypi.org/project/mcp-server-generator/
+- **PyPI**: https://pypi.org/project/hitoshura25-mcp-server-generator/
 - **GitHub**: https://github.com/hitoshura25/mcp-server-generator
 - **Issues**: https://github.com/hitoshura25/mcp-server-generator/issues
 - **Reference Implementation**: [pypi-workflow-generator](https://github.com/hitoshura25/pypi-workflow-generator)

@@ -377,9 +377,9 @@ After configuring mcp-server-generator:
 
 1. **Test the Configuration**: Ask Claude to validate a project name
 2. **Generate a Sample Project**: Create a simple calculator server
-3. **Explore Examples**: See [EXAMPLES.md](./EXAMPLES.md) for more ideas
-4. **Read the API**: Check the [README.md](./README.md) for CLI usage
-5. **Contribute**: See [CONTRIBUTING.md](./CONTRIBUTING.md) to contribute
+3. **Explore Examples**: See [EXAMPLES.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/EXAMPLES.md) for more ideas
+4. **Read the API**: Check the [README.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/README.md) for CLI usage
+5. **Contribute**: See [CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md) to contribute
 
 ## Support
 
@@ -389,7 +389,7 @@ After configuring mcp-server-generator:
 
 ## Related Documentation
 
-- [README.md](./README.md) - Main documentation
-- [EXAMPLES.md](./EXAMPLES.md) - Example projects
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Development guide
+- [README.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/README.md) - Main documentation
+- [EXAMPLES.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/EXAMPLES.md) - Example projects
+- [CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md) - Development guide
 - [MCP Protocol Specification](https://modelcontextprotocol.io/) - Official MCP docs
