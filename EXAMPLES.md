@@ -804,10 +804,10 @@ def complex_function(x: int, y: str) -> dict:
 
 ## Resources
 
-- **Main Documentation**: [README.md](./README.md)
-- **MCP Configuration**: [MCP-USAGE.md](./MCP-USAGE.md)
-- **Contributing**: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- **Test Plan**: [PHASE_4_TEST_PLAN.md](./PHASE_4_TEST_PLAN.md)
+- **Main Documentation**: [README.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/README.md)
+- **MCP Configuration**: [MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)
+- **Contributing**: [CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md)
+- **Test Plan**: [PHASE_4_TEST_PLAN.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/specs/PHASE_4_TEST_PLAN.md)
 
 ## Get Help
 
