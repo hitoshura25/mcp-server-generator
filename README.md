@@ -26,6 +26,7 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 ## Features
 
 - ✅ **Dual-mode architecture** (MCP + CLI)
+- ✅ **Package prefix support** (avoid PyPI namespace conflicts with AUTO detection)
 - ✅ **Complete project scaffolding** (tests, docs, packaging)
 - ✅ **GitHub Actions workflows** (via pypi-workflow-generator)
 - ✅ **Comprehensive test suite** (82% coverage with 27+ tests)
@@ -91,6 +92,67 @@ Configure mcp-server-generator as an MCP server in Claude Desktop to let Claude 
   }
 }
 ```
+
+**For detailed MCP configuration, see [MCP-USAGE.md](./MCP-USAGE.md)**
+
+## Package Prefix
+
+To avoid namespace conflicts on PyPI, mcp-server-generator supports prefixing package names. This is **highly recommended** for unique package names.
+
+### Prefix Modes
+
+**AUTO (Recommended)**
+- Automatically detects your GitHub username from git config
+- Priority: `github.user` → remote URL → `user.name` (sanitized)
+- Example: `my-tool` → `username-my-tool`
+
+**Custom Prefix**
+- Use your own prefix (organization name, brand, etc.)
+- Example: `--prefix acme` → `acme-my-tool`
+
+**NONE**
+- No prefix applied (only if you have a truly unique name)
+- Example: `unique-server-name` → `unique-server-name`
+
+### Usage Examples
+
+**Interactive Mode:**
+```bash
+mcp-server-generator-cli --interactive
+# You'll be prompted: "Prefix (default: AUTO): "
+# - Press Enter for AUTO detection
+# - Type "NONE" for no prefix
+# - Type "acme" for custom prefix
+```
+
+**Command-Line:**
+```bash
+# AUTO mode (default)
+mcp-server-generator-cli --project-name calculator --prefix AUTO ...
+
+# Custom prefix
+mcp-server-generator-cli --project-name calculator --prefix acme ...
+
+# No prefix
+mcp-server-generator-cli --project-name unique-calculator --prefix NONE ...
+```
+
+**MCP Server Mode:**
+```json
+{
+  "project_name": "calculator",
+  "prefix": "AUTO",
+  ...
+}
+```
+
+### Generated Names
+
+With prefix `username` and project `my-tool`:
+- **PyPI Package**: `username-my-tool` (install with `pip install username-my-tool`)
+- **Python Import**: `username_my_tool` (use in code as `import username_my_tool`)
+- **CLI Command**: `username-my-tool` (run as `username-my-tool --help`)
+- **MCP Command**: `mcp-username-my-tool` (use in config)
 
 **For detailed MCP configuration, see [MCP-USAGE.md](./MCP-USAGE.md)**
 
@@ -203,7 +265,7 @@ pytest mcp_server_generator/tests/test_server.py -v
 
 - Python ≥3.8
 - Jinja2 ≥3.0
-- pypi-workflow-generator ≥0.3.0
+- hitoshura25-pypi-workflow-generator ≥0.3.1
 
 ## Development
 

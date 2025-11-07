@@ -3,7 +3,7 @@ Tests for core generation logic.
 """
 
 import pytest
-from mcp_server_generator.generator import (
+from hitoshura25_mcp_server_generator.generator import (
     validate_project_name,
     validate_tool_name,
     generate_tool_schema,
@@ -124,7 +124,8 @@ def test_generate_mcp_server_success(tmp_path):
         author="Test Author",
         author_email="test@example.com",
         tools=tools,
-        output_dir=str(tmp_path)
+        output_dir=str(tmp_path),
+        prefix="NONE"
     )
 
     assert result['success'] == True
@@ -150,7 +151,8 @@ def test_generate_mcp_server_invalid_project_name():
             description="Test",
             author="Test",
             author_email="test@example.com",
-            tools=[{"name": "test", "description": "test", "parameters": []}]
+            tools=[{"name": "test", "description": "test", "parameters": []}],
+            prefix="NONE"
         )
 
 
@@ -162,7 +164,8 @@ def test_generate_mcp_server_invalid_tool_name():
             description="Test",
             author="Test",
             author_email="test@example.com",
-            tools=[{"name": "my-tool", "description": "test", "parameters": []}]  # hyphen invalid
+            tools=[{"name": "my-tool", "description": "test", "parameters": []}],  # hyphen invalid
+            prefix="NONE"
         )
 
 
@@ -174,7 +177,8 @@ def test_generate_mcp_server_no_tools():
             description="Test",
             author="Test",
             author_email="test@example.com",
-            tools=[]
+            tools=[],
+            prefix="NONE"
         )
 
 
@@ -190,5 +194,6 @@ def test_generate_mcp_server_existing_directory(tmp_path):
             author="Test",
             author_email="test@example.com",
             tools=[{"name": "test", "description": "test", "parameters": []}],
-            output_dir=str(tmp_path)
+            output_dir=str(tmp_path),
+            prefix="NONE"
         )

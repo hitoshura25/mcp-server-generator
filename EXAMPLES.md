@@ -640,48 +640,71 @@ pip install psutil
 
 Copy any example tool definition above to a file named `tools.json`.
 
-### 2. Generate the Project
+### 2. Choose Your Prefix (Recommended)
 
-Run the generator command shown in each example.
+To avoid PyPI namespace conflicts, use a package prefix:
 
-### 3. Implement Business Logic
+**AUTO (Recommended)**: Automatically detects your GitHub username
+```bash
+# Just add --prefix AUTO (or omit it, as AUTO is the default)
+mcp-server-generator-cli --project-name calculator --prefix AUTO ...
+```
+
+**Custom Prefix**: Use your own prefix
+```bash
+# Use your organization or brand name
+mcp-server-generator-cli --project-name calculator --prefix acme ...
+# Generates: acme-calculator
+```
+
+**NONE**: No prefix (only if you have a truly unique name)
+```bash
+mcp-server-generator-cli --project-name unique-tool-name --prefix NONE ...
+```
+
+### 3. Generate the Project
+
+Run the generator command shown in each example, adding your chosen prefix option.
+
+### 4. Implement Business Logic
 
 Navigate to the generated project and implement the TODO stubs:
 
 ```bash
-cd your-project-name
+# If using prefix "username" and project "calculator"
+cd username-calculator
 ```
 
-Edit `your_package/generator.py` and replace TODOs with actual implementation.
+Edit `username_calculator/generator.py` and replace TODOs with actual implementation.
 
-### 4. Run Tests
+### 5. Run Tests
 
 ```bash
 pytest
 ```
 
-### 5. Install and Use
+### 6. Install and Use
 
 ```bash
 # Install locally
 pip install -e .
 
-# Use as MCP server
-mcp-your-project-name
+# Use as MCP server (with prefix "username" and project "calculator")
+mcp-username-calculator
 
 # Or use CLI mode
-your-project-name-cli --help
+username-calculator --help
 ```
 
-### 6. Configure in Claude Desktop
+### 7. Configure in Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "your-project-name": {
-      "command": "mcp-your-project-name"
+    "username-calculator": {
+      "command": "mcp-username-calculator"
     }
   }
 }

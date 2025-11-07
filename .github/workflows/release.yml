@@ -53,7 +53,7 @@ jobs:
     uses: ./.github/workflows/_reusable-test-build.yml
     with:
       python_version: '3.8'
-      test_path: 'mcp_server_generator'
+      test_path: 'hitoshura25_mcp_server_generator'
       artifact_version: ${{ needs.calculate-version.outputs.new_version }}
 
   publish-to-pypi:

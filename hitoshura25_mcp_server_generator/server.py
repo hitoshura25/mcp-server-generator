@@ -78,6 +78,10 @@ class MCPServer:
                             "python_version": {
                                 "type": "string",
                                 "description": "Python version (default: '3.8')"
+                            },
+                            "prefix": {
+                                "type": "string",
+                                "description": "Package prefix: 'AUTO' (detect from git), 'NONE', or custom string (default: 'AUTO')"
                             }
                         },
                         "required": ["project_name", "description", "author", "author_email", "tools"]

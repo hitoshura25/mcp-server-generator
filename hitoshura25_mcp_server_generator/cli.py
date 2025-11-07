@@ -53,6 +53,13 @@ def interactive_mode():
             continue
         break
 
+    # Prefix mode
+    print("\nPackage prefix options:")
+    print("  AUTO  - Auto-detect from git config (recommended)")
+    print("  NONE  - No prefix")
+    print("  Other - Custom prefix (e.g., 'acme')")
+    prefix = input("Prefix (default: AUTO): ").strip() or "AUTO"
+
     # Description
     description = input("Description: ").strip()
     while not description:
@@ -122,7 +129,8 @@ def interactive_mode():
             author=author,
             author_email=author_email,
             tools=tools,
-            python_version=python_version
+            python_version=python_version,
+            prefix=prefix
         )
 
         print(f"\n✅ {result['message']}")
@@ -160,6 +168,11 @@ Examples:
     --author "Your Name" --email "you@example.com" \\
     --tools-file tools.json
 
+  # With custom prefix
+  %(prog)s --project-name my-tool --description "My tool" \\
+    --author "Your Name" --email "you@example.com" \\
+    --tools-file tools.json --prefix acme
+
   # With custom Python version
   %(prog)s -i --python-version 3.11
         """
@@ -173,6 +186,7 @@ Examples:
     parser.add_argument('--interactive', '-i', action='store_true', help='Interactive mode')
     parser.add_argument('--output-dir', help='Output directory (default: current directory)')
     parser.add_argument('--python-version', default='3.8', help='Python version (default: 3.8)')
+    parser.add_argument('--prefix', default='AUTO', help='Package prefix: AUTO (detect from git), NONE, or custom string (default: AUTO)')
 
     args = parser.parse_args()
 
@@ -205,7 +219,8 @@ Examples:
             author_email=args.email,
             tools=tools,
             output_dir=args.output_dir,
-            python_version=args.python_version
+            python_version=args.python_version,
+            prefix=args.prefix
         )
 
         print(result['message'])

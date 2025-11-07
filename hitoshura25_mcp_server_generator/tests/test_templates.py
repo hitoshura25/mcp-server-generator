@@ -3,13 +3,13 @@ Tests for template validation.
 """
 
 import py_compile
-from mcp_server_generator import generate_mcp_server, generate_tool_schema
+from hitoshura25_mcp_server_generator import generate_mcp_server, generate_tool_schema
 from jinja2 import Environment, FileSystemLoader
 
 
 def test_all_templates_render(tmp_path):
     """Test that all templates render without errors."""
-    template_dir = 'mcp_server_generator/templates/python'
+    template_dir = 'hitoshura25_mcp_server_generator/templates/python'
     env = Environment(loader=FileSystemLoader(template_dir))
 
     context = {
@@ -60,7 +60,8 @@ def test_generated_python_syntax(tmp_path):
         author="Test",
         author_email="test@test.com",
         tools=[{"name": "test", "description": "Test", "parameters": []}],
-        output_dir=str(tmp_path)
+        output_dir=str(tmp_path),
+        prefix="NONE"
     )
     assert result['success'] == True
 
@@ -85,7 +86,8 @@ def test_generated_files_contain_project_info(tmp_path):
         author="Test Author",
         author_email="test@test.com",
         tools=[{"name": "func", "description": "Function", "parameters": []}],
-        output_dir=str(tmp_path)
+        output_dir=str(tmp_path),
+        prefix="NONE"
     )
     assert result['success'] == True
 

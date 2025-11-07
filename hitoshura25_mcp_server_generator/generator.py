@@ -6,6 +6,7 @@ import os
 import keyword
 from typing import Dict, List, Any, Optional
 from jinja2 import Environment, FileSystemLoader
+from .git_utils import apply_prefix
 
 
 def validate_project_name(name: Optional[str]) -> bool:
@@ -144,12 +145,13 @@ def generate_mcp_server(
     output_dir: Optional[str] = None,
     python_version: str = "3.8",
     license_type: str = "Apache-2.0",
+    prefix: str = "AUTO",
 ) -> Dict[str, Any]:
     """
     Generate a complete MCP server project.
 
     Args:
-        project_name: Project name (e.g., "my-mcp-server")
+        project_name: Base project name (e.g., "my-mcp-server")
         description: Project description
         author: Author name
         author_email: Author email
@@ -157,6 +159,7 @@ def generate_mcp_server(
         output_dir: Where to create project (default: current directory)
         python_version: Python version for testing (default: "3.8")
         license_type: License type (default: "Apache-2.0")
+        prefix: Prefix mode - "AUTO" (detect from git), custom string, or "NONE"
 
     Returns:
         {
@@ -189,8 +192,22 @@ def generate_mcp_server(
     if not tools:
         raise ValueError("At least one tool must be defined.")
 
-    # Convert project name to package name
-    package_name = project_name.replace('-', '_')
+    # Store original name
+    base_name = project_name
+
+    # Apply prefix to generate full package and import names
+    full_package_name, import_name = apply_prefix(project_name, prefix)
+
+    # Validate the full package name
+    if not validate_project_name(full_package_name):
+        raise ValueError(
+            f"Invalid generated package name: '{full_package_name}'. "
+            f"This may be due to an invalid prefix. Try using a different prefix."
+        )
+
+    # Use the full names for the project
+    project_name = full_package_name
+    package_name = import_name
 
     # Determine output directory
     if output_dir is None:
@@ -217,8 +234,10 @@ def generate_mcp_server(
 
     # Prepare template context
     context = {
-        'project_name': project_name,
-        'package_name': package_name,
+        'project_name': project_name,     # Full name with hyphens (e.g., "hitoshura25-my-tool")
+        'package_name': package_name,     # Full name with underscores (e.g., "hitoshura25_my_tool")
+        'import_name': import_name,       # Same as package_name (for clarity in entry points)
+        'base_name': base_name,           # Original name without prefix (e.g., "my-tool")
         'description': sanitize_description(description),
         'author': author,
         'author_email': author_email,
@@ -276,7 +295,7 @@ def generate_mcp_server(
 
     # Generate GitHub Actions workflow (required)
     try:
-        from pypi_workflow_generator import generate_workflows
+        from hitoshura25_pypi_workflow_generator import generate_workflows
 
         # Change to project directory
         original_dir = os.getcwd()
