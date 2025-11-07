@@ -4,6 +4,42 @@
 
 ## Installation
 
+### For MCP Server Usage (Recommended)
+
+**Using uvx (no installation required):**
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "{{ package_name }}": {
+      "command": "uvx",
+      "args": ["{{ project_name }}"]
+    }
+  }
+}
+```
+
+**Prerequisites:** Install [uv](https://docs.astral.sh/uv/):
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### For CLI Usage (Alternative)
+
+**Using pipx (isolated installation):**
+
+```bash
+pipx install {{ project_name }}
+```
+
+**Using pip:**
+
 ```bash
 pip install {{ project_name }}
 ```
@@ -12,13 +48,13 @@ pip install {{ project_name }}
 
 ### MCP Server Mode (For AI Agents)
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+If using pipx/pip installation, configure:
 
 ```json
 {
   "mcpServers": {
     "{{ package_name }}": {
-      "command": "mcp-{{ project_name }}"
+      "command": "{{ project_name }}"
     }
   }
 }
