@@ -233,6 +233,23 @@ def generate_mcp_server(
     if not os.path.exists(template_dir):
         raise FileNotFoundError(f"Templates not found at {template_dir}")
 
+    # Validate and enforce minimum Python version
+    # MCP SDK requires Python 3.10+
+    def parse_version(version_str: str) -> tuple:
+        """Parse version string like '3.10' into tuple (3, 10)"""
+        try:
+            parts = version_str.split('.')
+            return tuple(int(p) for p in parts[:2])  # Use major.minor only
+        except (ValueError, AttributeError):
+            return (3, 10)  # Default to 3.10 if parsing fails
+
+    user_version = parse_version(python_version)
+    min_version = (3, 10)
+
+    # Use the higher of user's version or minimum required version
+    validated_version = max(user_version, min_version)
+    validated_python_version = f"{validated_version[0]}.{validated_version[1]}"
+
     # Prepare template context
     context = {
         'project_name': project_name,     # Full name with hyphens (e.g., "hitoshura25-my-tool")
@@ -242,7 +259,7 @@ def generate_mcp_server(
         'description': sanitize_description(description),
         'author': author,
         'author_email': author_email,
-        'python_version': python_version,
+        'python_version': validated_python_version,
         'license': license_type,
         'tools': tools,
         'tool_schemas': [generate_tool_schema(tool) for tool in tools],

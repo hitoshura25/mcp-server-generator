@@ -93,8 +93,11 @@ def test_generate_mcp_server_with_options(tmp_path):
     result = json.loads(result_json)
     assert result["success"]
 
-    # Verify custom Python version in generated workflow files
-    # Note: python_version affects workflows, not pyproject.toml (which is always >=3.10)
+    # Verify custom Python version in generated files
+    # python_version affects both workflows AND package requirements
+    pyproject_content = (tmp_path / "custom-mcp" / "pyproject.toml").read_text()
+    assert "requires-python = \">=3.11\"" in pyproject_content
+
     workflow_content = (tmp_path / "custom-mcp" / ".github" / "workflows" / "release.yml").read_text()
     assert "python_version: '3.11'" in workflow_content
 

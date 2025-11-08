@@ -119,9 +119,15 @@ The FastMCP SDK automatically handles:
 
 When using this server through an MCP client (like Claude Desktop), the SDK handles all protocol details. Your tools are called with clean, validated arguments:
 
+{% if tools %}
 **Tool Definition:**
 - Name: `{{ tools[0].name }}`
-- Parameters: {% for param in tools[0].parameters %}{{ param.name }} ({{ param.type }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% if tools[0].parameters %}- Parameters: {% for param in tools[0].parameters %}{{ param.name }} ({{ param.type }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% else %}- Parameters: None
+{% endif %}
+{% else %}
+**Tool Definition:** (Example - define your tools)
+{% endif %}
 
 **Result:**
 The tool returns its result as a string, which the SDK formats into proper MCP response messages.
