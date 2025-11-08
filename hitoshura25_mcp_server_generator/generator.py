@@ -143,7 +143,7 @@ def generate_mcp_server(
     author_email: str,
     tools: List[Dict[str, Any]],
     output_dir: Optional[str] = None,
-    python_version: str = "3.8",
+    python_version: str = "3.10",
     license_type: str = "Apache-2.0",
     prefix: str = "AUTO",
 ) -> Dict[str, Any]:
