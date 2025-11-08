@@ -28,11 +28,11 @@ async def test_server_initialization():
 def test_{{ tool.name }}_function():
     """Test {{ tool.name }} tool function."""
     # Test the function directly
-    result = {{ tool.name }}(
+    result = {{ tool.name }}({% if tool.parameters %}
         {% for param in tool.parameters %}
         {{ param.name }}={% if param.type in ['string', 'str'] %}"test_value"{% elif param.type in ['number', 'int', 'integer'] %}42{% elif param.type in ['boolean', 'bool'] %}True{% else %}"test"{% endif %}{{ ',' if not loop.last else '' }}
         {% endfor %}
-    )
+    {% endif %})
 
     # Result should be a string (FastMCP tools return strings)
     assert isinstance(result, str)

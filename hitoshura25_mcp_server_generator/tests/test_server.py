@@ -69,7 +69,7 @@ def test_generate_mcp_server_function(tmp_path):
     assert isinstance(result_json, str)
     result = json.loads(result_json)
 
-    assert result["success"] == True
+    assert result["success"]
     assert "project_path" in result
 
     # Verify project was created
@@ -91,11 +91,12 @@ def test_generate_mcp_server_with_options(tmp_path):
     )
 
     result = json.loads(result_json)
-    assert result["success"] == True
+    assert result["success"]
 
-    # Verify custom Python version in generated files
-    pyproject_content = (tmp_path / "custom-mcp" / "pyproject.toml").read_text()
-    assert "3.11" in pyproject_content
+    # Verify custom Python version in generated workflow files
+    # Note: python_version affects workflows, not pyproject.toml (which is always >=3.10)
+    workflow_content = (tmp_path / "custom-mcp" / ".github" / "workflows" / "release.yml").read_text()
+    assert "python_version: '3.11'" in workflow_content
 
 
 def test_generate_mcp_server_invalid_name():

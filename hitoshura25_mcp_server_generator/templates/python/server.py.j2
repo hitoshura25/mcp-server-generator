@@ -15,17 +15,19 @@ mcp = FastMCP("{{ package_name }}")
 {% for tool in tools %}
 
 @mcp.tool()
-def {{ tool.name }}(
+def {{ tool.name }}({% if tool.parameters %}
     {% for param in tool.parameters %}
     {{ param.name }}: {% if param.type in ['string', 'str'] %}str{% elif param.type in ['number', 'int', 'integer'] %}int{% elif param.type in ['float'] %}float{% elif param.type in ['boolean', 'bool'] %}bool{% else %}str{% endif %}{% if not param.required %} = None{% endif %}{{ ',' if not loop.last else '' }}
     {% endfor %}
-) -> str:
+{% endif %}) -> str:
     """{{ tool.description }}
+{% if tool.parameters %}
 
     Args:
         {% for param in tool.parameters %}
         {{ param.name }}: {{ param.description }}
         {% endfor %}
+{% endif %}
 
     Returns:
         Result from {{ tool.name }}

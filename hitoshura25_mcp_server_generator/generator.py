@@ -157,7 +157,8 @@ def generate_mcp_server(
         author_email: Author email
         tools: List of tool definitions
         output_dir: Where to create project (default: current directory)
-        python_version: Python version for testing (default: "3.8")
+        python_version: Python version for GitHub Actions workflows (default: "3.10").
+                       Note: Package requires-python is always ">=3.10" (MCP SDK requirement).
         license_type: License type (default: "Apache-2.0")
         prefix: Prefix mode - "AUTO" (detect from git), custom string, or "NONE"
 
