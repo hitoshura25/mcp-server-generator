@@ -100,43 +100,37 @@ echo '{"method": "tools/list", "id": 1}' | mcp-{{ project_name }}
 
 ## Protocol Details
 
-This MCP server implements:
-- **Protocol**: JSON-RPC over stdio
-- **Methods**: 
+This MCP server implements the Model Context Protocol using the official FastMCP SDK:
+- **Protocol**: MCP (Model Context Protocol) via JSON-RPC over stdio
+- **SDK**: Official MCP Python SDK (FastMCP)
+- **Methods**: All standard MCP methods including:
+  - `initialize` - Protocol initialization and capability negotiation
+  - `initialized` - Initialization confirmation
   - `tools/list` - List available tools
   - `tools/call` - Execute a tool
 
-### Example Request/Response
+The FastMCP SDK automatically handles:
+- Protocol version negotiation
+- Capability exchange
+- Error handling and validation
+- Message formatting
 
-**Request:**
-```json
-{
-  "method": "tools/call",
-  "id": 1,
-  "params": {
-    "name": "{{ tools[0].name }}",
-    "arguments": {
-      {% for param in tools[0].parameters %}
-      "{{ param.name }}": "example_value"{% if not loop.last %},{% endif %}
-      {% endfor %}
-    }
-  }
-}
-```
+### Example Tool Call
 
-**Response:**
-```json
-{
-  "id": 1,
-  "content": [
-    {
-      "type": "text",
-      "text": "Result from tool execution"
-    }
-  ],
-  "isError": false
-}
-```
+When using this server through an MCP client (like Claude Desktop), the SDK handles all protocol details. Your tools are called with clean, validated arguments:
+
+{% if tools %}
+**Tool Definition:**
+- Name: `{{ tools[0].name }}`
+{% if tools[0].parameters %}- Parameters: {% for param in tools[0].parameters %}{{ param.name }} ({{ param.type }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% else %}- Parameters: None
+{% endif %}
+{% else %}
+**Tool Definition:** (Example - define your tools)
+{% endif %}
+
+**Result:**
+The tool returns its result as a string, which the SDK formats into proper MCP response messages.
 
 ## Further Reading
 

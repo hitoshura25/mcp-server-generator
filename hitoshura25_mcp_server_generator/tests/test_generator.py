@@ -197,3 +197,47 @@ def test_generate_mcp_server_existing_directory(tmp_path):
             output_dir=str(tmp_path),
             prefix="NONE"
         )
+
+
+def test_generate_mcp_server_python_version_minimum(tmp_path):
+    """Test that Python version is enforced to minimum 3.10."""
+    # Try to create a project with Python 3.9 (below minimum)
+    result = generate_mcp_server(
+        project_name="test-old-python",
+        description="Test",
+        author="Test",
+        author_email="test@test.com",
+        tools=[{"name": "test", "description": "Test", "parameters": []}],
+        output_dir=str(tmp_path),
+        python_version="3.9",  # Below minimum
+        prefix="NONE"
+    )
+
+    assert result["success"]
+
+    # Should have enforced minimum 3.10
+    pyproject_path = tmp_path / "test-old-python" / "pyproject.toml"
+    pyproject_content = pyproject_path.read_text()
+    assert "requires-python = \">=3.10\"" in pyproject_content
+    assert "requires-python = \">=3.9\"" not in pyproject_content
+
+
+def test_generate_mcp_server_python_version_custom(tmp_path):
+    """Test that custom Python version above 3.10 is honored."""
+    result = generate_mcp_server(
+        project_name="test-new-python",
+        description="Test",
+        author="Test",
+        author_email="test@test.com",
+        tools=[{"name": "test", "description": "Test", "parameters": []}],
+        output_dir=str(tmp_path),
+        python_version="3.12",  # Above minimum
+        prefix="NONE"
+    )
+
+    assert result["success"]
+
+    # Should use the specified version
+    pyproject_path = tmp_path / "test-new-python" / "pyproject.toml"
+    pyproject_content = pyproject_path.read_text()
+    assert "requires-python = \">=3.12\"" in pyproject_content

@@ -78,7 +78,7 @@ def interactive_mode():
         author_email = input("Author email: ").strip()
 
     # Python version
-    python_version = input("Python version (default: 3.8): ").strip() or "3.8"
+    python_version = input("Python version (default: 3.10): ").strip() or "3.10"
 
     # Tools
     print("\nDefine your tools (empty name to finish):")
@@ -185,7 +185,7 @@ Examples:
     parser.add_argument('--tools-file', help='JSON/YAML file with tool definitions')
     parser.add_argument('--interactive', '-i', action='store_true', help='Interactive mode')
     parser.add_argument('--output-dir', help='Output directory (default: current directory)')
-    parser.add_argument('--python-version', default='3.8', help='Python version (default: 3.8)')
+    parser.add_argument('--python-version', default='3.10', help='Python version (default: 3.10)')
     parser.add_argument('--prefix', default='AUTO', help='Package prefix: AUTO (detect from git), NONE, or custom string (default: AUTO)')
 
     args = parser.parse_args()

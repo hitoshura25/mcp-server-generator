@@ -143,7 +143,7 @@ def generate_mcp_server(
     author_email: str,
     tools: List[Dict[str, Any]],
     output_dir: Optional[str] = None,
-    python_version: str = "3.8",
+    python_version: str = "3.10",
     license_type: str = "Apache-2.0",
     prefix: str = "AUTO",
 ) -> Dict[str, Any]:
@@ -157,7 +157,8 @@ def generate_mcp_server(
         author_email: Author email
         tools: List of tool definitions
         output_dir: Where to create project (default: current directory)
-        python_version: Python version for testing (default: "3.8")
+        python_version: Python version for GitHub Actions workflows (default: "3.10").
+                       Note: Package requires-python is always ">=3.10" (MCP SDK requirement).
         license_type: License type (default: "Apache-2.0")
         prefix: Prefix mode - "AUTO" (detect from git), custom string, or "NONE"
 
@@ -232,6 +233,23 @@ def generate_mcp_server(
     if not os.path.exists(template_dir):
         raise FileNotFoundError(f"Templates not found at {template_dir}")
 
+    # Validate and enforce minimum Python version
+    # MCP SDK requires Python 3.10+
+    def parse_version(version_str: str) -> tuple:
+        """Parse version string like '3.10' into tuple (3, 10)"""
+        try:
+            parts = version_str.split('.')
+            return tuple(int(p) for p in parts[:2])  # Use major.minor only
+        except (ValueError, AttributeError):
+            return (3, 10)  # Default to 3.10 if parsing fails
+
+    user_version = parse_version(python_version)
+    min_version = (3, 10)
+
+    # Use the higher of user's version or minimum required version
+    validated_version = max(user_version, min_version)
+    validated_python_version = f"{validated_version[0]}.{validated_version[1]}"
+
     # Prepare template context
     context = {
         'project_name': project_name,     # Full name with hyphens (e.g., "hitoshura25-my-tool")
@@ -241,7 +259,7 @@ def generate_mcp_server(
         'description': sanitize_description(description),
         'author': author,
         'author_email': author_email,
-        'python_version': python_version,
+        'python_version': validated_python_version,
         'license': license_type,
         'tools': tools,
         'tool_schemas': [generate_tool_schema(tool) for tool in tools],

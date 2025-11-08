@@ -5,106 +5,45 @@ MCP Server for {{ project_name }}.
 {{ description }}
 """
 
-import sys
-import json
-import asyncio
-from typing import Any, Dict
+from mcp.server.fastmcp import FastMCP
 
-from .generator import (
-    {% for tool in tools %}
-    {{ tool.name }},
+from . import generator
+
+# Initialize FastMCP server
+mcp = FastMCP("{{ package_name }}")
+
+{% for tool in tools %}
+
+@mcp.tool()
+def {{ tool.name }}({% if tool.parameters %}
+    {% for param in tool.parameters %}
+    {{ param.name }}: {% if param.type in ['string', 'str'] %}str{% elif param.type in ['number', 'int', 'integer'] %}int{% elif param.type in ['float'] %}float{% elif param.type in ['boolean', 'bool'] %}bool{% else %}str{% endif %}{% if not param.required %} = None{% endif %}{{ ',' if not loop.last else '' }}
     {% endfor %}
-)
+{% endif %}) -> str:
+    """{{ tool.description }}
+{% if tool.parameters %}
 
+    Args:
+        {% for param in tool.parameters %}
+        {{ param.name }}: {{ param.description }}
+        {% endfor %}
+{% endif %}
 
-class MCPServer:
-    """MCP server for {{ project_name }}."""
-
-    def __init__(self):
-        self.name = "{{ package_name }}"
-        self.version = "1.0.0"
-
-    async def handle_list_tools(self) -> Dict[str, Any]:
-        """List available tools."""
-        return {
-            "tools": {{ tool_schemas | tojson(indent=16) }}
-        }
-
-    async def handle_call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a tool."""
-        try:
-            {% for tool in tools %}
-            if tool_name == "{{ tool.name }}":
-                result = {{ tool.name }}(**arguments)
-                return {
-                    "content": [{"type": "text", "text": str(result)}],
-                    "isError": False
-                }
-            {% endfor %}
-
-            return {
-                "content": [{"type": "text", "text": f"Unknown tool: {tool_name}"}],
-                "isError": True
-            }
-
-        except Exception as e:
-            return {
-                "content": [{"type": "text", "text": f"Error: {str(e)}"}],
-                "isError": True
-            }
-
-    async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle MCP request."""
-        method = request.get("method")
-        params = request.get("params", {})
-
-        if method == "tools/list":
-            return await self.handle_list_tools()
-        elif method == "tools/call":
-            return await self.handle_call_tool(
-                params.get("name"),
-                params.get("arguments", {})
-            )
-        else:
-            return {
-                "error": {
-                    "code": -32601,
-                    "message": f"Method not found: {method}"
-                }
-            }
-
-    async def run(self):
-        """Run MCP server on stdio."""
-        while True:
-            try:
-                line = sys.stdin.readline()
-                if not line:
-                    break
-
-                request = json.loads(line)
-                response = await self.handle_request(request)
-
-                if "id" in request:
-                    response["id"] = request["id"]
-
-                print(json.dumps(response), flush=True)
-
-            except json.JSONDecodeError as e:
-                error_response = {
-                    "error": {"code": -32700, "message": f"Parse error: {str(e)}"}
-                }
-                print(json.dumps(error_response), flush=True)
-            except Exception as e:
-                error_response = {
-                    "error": {"code": -32603, "message": f"Internal error: {str(e)}"}
-                }
-                print(json.dumps(error_response), flush=True)
+    Returns:
+        Result from {{ tool.name }}
+    """
+    result = generator.{{ tool.name }}(
+        {% for param in tool.parameters %}
+        {{ param.name }}={{ param.name }}{{ ',' if not loop.last else '' }}
+        {% endfor %}
+    )
+    return str(result)
+{% endfor %}
 
 
 def main():
-    """Main entry point."""
-    server = MCPServer()
-    asyncio.run(server.run())
+    """Main entry point for MCP server."""
+    mcp.run()
 
 
 if __name__ == "__main__":
