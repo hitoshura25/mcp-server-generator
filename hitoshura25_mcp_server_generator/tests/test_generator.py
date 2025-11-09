@@ -241,3 +241,81 @@ def test_generate_mcp_server_python_version_custom(tmp_path):
     pyproject_path = tmp_path / "test-new-python" / "pyproject.toml"
     pyproject_content = pyproject_path.read_text()
     assert "requires-python = \">=3.12\"" in pyproject_content
+
+
+def test_generate_mcp_server_in_place(tmp_path):
+    """Test in-place generation with output_dir='.'"""
+    # Change to temp directory
+    import os
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        result = generate_mcp_server(
+            project_name="test-server",
+            description="Test MCP server",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[{"name": "test_func", "description": "Test function", "parameters": []}],
+            output_dir=".",  # In-place generation
+            prefix="NONE"
+        )
+
+        assert result['success']
+
+        # Files should be in tmp_path directly, not in a subdirectory
+        assert (tmp_path / "README.md").exists()
+        assert (tmp_path / "pyproject.toml").exists()
+        assert (tmp_path / "test_server" / "server.py").exists()
+        assert (tmp_path / ".github" / "workflows" / "release.yml").exists()
+
+        # Verify project_path is the current directory
+        assert result['project_path'] == str(tmp_path)
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_generate_mcp_server_in_place_conflict(tmp_path):
+    """Test that in-place generation fails if conflicting files exist."""
+    import os
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Create a conflicting file
+        (tmp_path / "pyproject.toml").write_text("existing content")
+
+        with pytest.raises(FileExistsError, match="conflicting files exist"):
+            generate_mcp_server(
+                project_name="test-server",
+                description="Test",
+                author="Test",
+                author_email="test@example.com",
+                tools=[{"name": "test", "description": "test", "parameters": []}],
+                output_dir=".",
+                prefix="NONE"
+            )
+    finally:
+        os.chdir(original_dir)
+
+
+def test_generate_mcp_server_with_output_dir(tmp_path):
+    """Test that non-'.' output_dir creates subdirectory."""
+    result = generate_mcp_server(
+        project_name="test-server",
+        description="Test",
+        author="Test",
+        author_email="test@example.com",
+        tools=[{"name": "test", "description": "test", "parameters": []}],
+        output_dir=str(tmp_path),
+        prefix="NONE"
+    )
+
+    assert result['success']
+
+    # Should create subdirectory
+    project_dir = tmp_path / "test-server"
+    assert project_dir.exists()
+    assert (project_dir / "README.md").exists()
+    assert (project_dir / "pyproject.toml").exists()

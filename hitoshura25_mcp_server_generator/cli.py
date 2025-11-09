@@ -184,7 +184,7 @@ Examples:
     parser.add_argument('--email', help='Author email')
     parser.add_argument('--tools-file', help='JSON/YAML file with tool definitions')
     parser.add_argument('--interactive', '-i', action='store_true', help='Interactive mode')
-    parser.add_argument('--output-dir', help='Output directory (default: current directory)')
+    parser.add_argument('--output-dir', help='Output directory. Use "." to generate in current directory (in-place), or specify a path to create a subdirectory (default: current directory)')
     parser.add_argument('--python-version', default='3.10', help='Python version (default: 3.10)')
     parser.add_argument('--prefix', default='AUTO', help='Package prefix: AUTO (detect from git), NONE, or custom string (default: AUTO)')
 
