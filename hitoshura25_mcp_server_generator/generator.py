@@ -156,7 +156,10 @@ def generate_mcp_server(
         author: Author name
         author_email: Author email
         tools: List of tool definitions
-        output_dir: Where to create project (default: current directory)
+        output_dir: Where to create project. Special cases:
+                   - None (default): Creates subdirectory in current directory
+                   - "." : Generates files directly in current directory (in-place)
+                   - Any other path: Creates subdirectory in specified path
         python_version: Python version for GitHub Actions workflows (default: "3.10").
                        Note: Package requires-python is always ">=3.10" (MCP SDK requirement).
         license_type: License type (default: "Apache-2.0")
@@ -214,17 +217,46 @@ def generate_mcp_server(
     if output_dir is None:
         output_dir = os.getcwd()
 
-    project_path = os.path.join(output_dir, project_name)
+    # Normalize paths for comparison to handle ".", "./", absolute paths, etc.
+    normalized_output = os.path.normpath(os.path.abspath(output_dir))
+    current_dir = os.path.normpath(os.path.abspath(os.getcwd()))
 
-    # Check if directory exists
-    if os.path.exists(project_path):
-        raise FileExistsError(
-            f"Directory already exists: {project_path}\n"
-            f"Solutions:\n"
-            f"  1. Choose a different project name\n"
-            f"  2. Remove the existing directory: rm -rf {project_path}\n"
-            f"  3. Specify a different output directory with --output-dir"
-        )
+    # Determine project path
+    # If normalized output_dir matches current directory, generate in-place
+    # Otherwise, create a subdirectory named after the project
+    if normalized_output == current_dir:
+        project_path = os.getcwd()
+        # For in-place generation, check for conflicting files instead of directory
+        conflicting_files = [
+            'pyproject.toml', 'setup.py', 'README.md',
+            'MCP-USAGE.md', 'LICENSE', 'requirements.txt',
+            'MANIFEST.in', '.gitignore'
+        ]
+        existing = [f for f in conflicting_files if os.path.exists(os.path.join(project_path, f))]
+
+        # Also check if package directory already exists
+        if os.path.exists(os.path.join(project_path, package_name)):
+            existing.append(f'{package_name}/ directory')
+
+        if existing:
+            raise FileExistsError(
+                f"Cannot generate in-place: conflicting files exist: {', '.join(existing)}\n"
+                f"Solutions:\n"
+                f"  1. Use a different output directory (don't use '.')\n"
+                f"  2. Remove or backup the existing files\n"
+                f"  3. Generate in a subdirectory by omitting --output-dir"
+            )
+    else:
+        project_path = os.path.join(output_dir, project_name)
+        # Check if directory exists
+        if os.path.exists(project_path):
+            raise FileExistsError(
+                f"Directory already exists: {project_path}\n"
+                f"Solutions:\n"
+                f"  1. Choose a different project name\n"
+                f"  2. Remove the existing directory: rm -rf {project_path}\n"
+                f"  3. Specify a different output directory with --output-dir"
+            )
 
     # Get template directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
