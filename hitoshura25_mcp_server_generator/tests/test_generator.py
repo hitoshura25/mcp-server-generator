@@ -3,6 +3,7 @@ Tests for core generation logic.
 """
 
 import pytest
+import os
 from hitoshura25_mcp_server_generator.generator import (
     validate_project_name,
     validate_tool_name,
@@ -10,7 +11,6 @@ from hitoshura25_mcp_server_generator.generator import (
     sanitize_description,
     generate_mcp_server,
 )
-
 
 def test_validate_project_name_valid():
     """Test valid project names."""
@@ -128,7 +128,7 @@ def test_generate_mcp_server_success(tmp_path):
         prefix="NONE"
     )
 
-    assert result['success'] == True
+    assert result['success']
     assert 'project_path' in result
     assert 'files_created' in result
     assert len(result['files_created']) > 0
@@ -246,7 +246,6 @@ def test_generate_mcp_server_python_version_custom(tmp_path):
 def test_generate_mcp_server_in_place(tmp_path):
     """Test in-place generation with output_dir='.'"""
     # Change to temp directory
-    import os
     original_dir = os.getcwd()
     os.chdir(tmp_path)
 
@@ -278,7 +277,7 @@ def test_generate_mcp_server_in_place(tmp_path):
 
 def test_generate_mcp_server_in_place_conflict(tmp_path):
     """Test that in-place generation fails if conflicting files exist."""
-    import os
+    
     original_dir = os.getcwd()
     os.chdir(tmp_path)
 

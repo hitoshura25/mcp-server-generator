@@ -217,14 +217,27 @@ def generate_mcp_server(
     if output_dir is None:
         output_dir = os.getcwd()
 
+    # Normalize paths for comparison to handle ".", "./", absolute paths, etc.
+    normalized_output = os.path.normpath(os.path.abspath(output_dir))
+    current_dir = os.path.normpath(os.path.abspath(os.getcwd()))
+
     # Determine project path
-    # If output_dir is ".", generate in-place (current directory)
+    # If normalized output_dir matches current directory, generate in-place
     # Otherwise, create a subdirectory named after the project
-    if output_dir == ".":
+    if normalized_output == current_dir:
         project_path = os.getcwd()
         # For in-place generation, check for conflicting files instead of directory
-        conflicting_files = ['pyproject.toml', 'setup.py', 'README.md']
+        conflicting_files = [
+            'pyproject.toml', 'setup.py', 'README.md',
+            'MCP-USAGE.md', 'LICENSE', 'requirements.txt',
+            'MANIFEST.in', '.gitignore'
+        ]
         existing = [f for f in conflicting_files if os.path.exists(os.path.join(project_path, f))]
+
+        # Also check if package directory already exists
+        if os.path.exists(os.path.join(project_path, package_name)):
+            existing.append(f'{package_name}/ directory')
+
         if existing:
             raise FileExistsError(
                 f"Cannot generate in-place: conflicting files exist: {', '.join(existing)}\n"
