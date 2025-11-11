@@ -25,6 +25,7 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 ## Features
 
 - ✅ **Dual-mode architecture** (MCP + CLI)
+- ✅ **Async/await support** (async handlers for I/O operations, avoids event loop errors)
 - ✅ **Package prefix support** (avoid PyPI namespace conflicts with AUTO detection)
 - ✅ **Complete project scaffolding** (tests, docs, packaging)
 - ✅ **GitHub Actions workflows** (via pypi-workflow-generator)
@@ -282,6 +283,7 @@ Create a `tools.json` file to define your MCP server's tools:
 ## Documentation
 
 - **[MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)** - Detailed MCP server configuration guide
+- **[ASYNC_GUIDE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/ASYNC_GUIDE.md)** - Complete guide for using async/await in generated MCP servers
 - **[EXAMPLES.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/EXAMPLES.md)** - Example projects and use cases
 - **[CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md)** - Development and contribution guidelines
 
