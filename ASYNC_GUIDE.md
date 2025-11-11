@@ -61,7 +61,7 @@ async def my_tool(url: str) -> str:
     result = generator.my_tool(url)
 
     # Handle both sync and async business logic
-    if inspect.iscoroutine(result):
+    if inspect.isawaitable(result):
         result = await result
 
     return str(result)
@@ -246,6 +246,9 @@ async def query_with_connection(query: str) -> Dict[str, Any]:
 ### 5. Avoid Blocking Operations in Async Functions
 
 ```python
+import time
+import asyncio
+
 # ❌ Bad: Blocking operations in async function
 async def bad_example():
     time.sleep(5)  # Blocks the entire event loop!
@@ -258,8 +261,14 @@ async def good_example():
 
 # ✅ Also Good: Run blocking code in executor
 async def better_example():
+    import requests
+
+    def blocking_http_call():
+        # Old sync code that you can't easily convert
+        return requests.get("https://api.example.com").json()
+
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, blocking_function)
+    result = await loop.run_in_executor(None, blocking_http_call)
     return result
 ```
 
@@ -360,6 +369,12 @@ if inspect.iscoroutinefunction(my_function):
     print("This is an async function")
 else:
     print("This is a sync function")
+
+# Check if a result is awaitable (coroutine, Task, Future, etc.)
+result = my_function()
+if inspect.isawaitable(result):
+    print("This result needs to be awaited")
+    result = await result
 ```
 
 ## Performance Benefits
@@ -367,15 +382,27 @@ else:
 Using async operations properly can significantly improve performance:
 
 ```python
+import requests
+import httpx
+import asyncio
+
 # Sync: Takes 3 seconds (sequential)
-def fetch_three_apis():
+def fetch_three_apis_sync():
+    url1 = "https://api.example.com/users"
+    url2 = "https://api.example.com/posts"
+    url3 = "https://api.example.com/comments"
+
     data1 = requests.get(url1).json()  # 1 second
     data2 = requests.get(url2).json()  # 1 second
     data3 = requests.get(url3).json()  # 1 second
     return [data1, data2, data3]
 
-# Async: Takes ~1 second (concurrent)
-async def fetch_three_apis():
+# Async: Takes approximately the time of the slowest request (typically ~1 second)
+async def fetch_three_apis_async():
+    url1 = "https://api.example.com/users"
+    url2 = "https://api.example.com/posts"
+    url3 = "https://api.example.com/comments"
+
     async with httpx.AsyncClient() as client:
         results = await asyncio.gather(
             client.get(url1),
@@ -384,6 +411,8 @@ async def fetch_three_apis():
         )
     return [r.json() for r in results]
 ```
+
+**Key difference:** The async version runs all three API calls concurrently, so the total time is approximately equal to the slowest individual request, rather than the sum of all requests.
 
 ## Further Reading
 

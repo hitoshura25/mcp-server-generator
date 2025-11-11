@@ -39,7 +39,7 @@ async def {{ tool.name }}({% if tool.parameters %}
         {% endfor %}
     )
     # Handle both sync and async business logic
-    if inspect.iscoroutine(result):
+    if inspect.isawaitable(result):
         result = await result
     return str(result)
 {% endfor %}
