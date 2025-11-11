@@ -23,6 +23,24 @@ def {{ tool.name }}(
 
     Returns:
         Result dictionary
+
+    Note:
+        This function is currently synchronous. If you need to perform async
+        operations (API calls, database queries, subprocess execution), you can
+        make this function async by:
+
+        1. Change the function signature to: async def {{ tool.name }}(...)
+        2. Use 'await' for async operations instead of asyncio.run()
+
+        Example:
+            async def {{ tool.name }}(...) -> Dict[str, Any]:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    response = await client.get("https://api.example.com/data")
+                    data = response.json()
+                return {'success': True, 'data': data}
+
+        The MCP server handlers will automatically detect and await async functions.
     """
     # TODO: Implement {{ tool.name }} logic
     return {

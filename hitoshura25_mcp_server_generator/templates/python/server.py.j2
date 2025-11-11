@@ -5,6 +5,7 @@ MCP Server for {{ project_name }}.
 {{ description }}
 """
 
+import inspect
 from mcp.server.fastmcp import FastMCP
 
 from . import generator
@@ -15,7 +16,7 @@ mcp = FastMCP("{{ package_name }}")
 {% for tool in tools %}
 
 @mcp.tool()
-def {{ tool.name }}({% if tool.parameters %}
+async def {{ tool.name }}({% if tool.parameters %}
     {% for param in tool.parameters %}
     {{ param.name }}: {% if param.type in ['string', 'str'] %}str{% elif param.type in ['number', 'int', 'integer'] %}int{% elif param.type in ['float'] %}float{% elif param.type in ['boolean', 'bool'] %}bool{% else %}str{% endif %}{% if not param.required %} = None{% endif %}{{ ',' if not loop.last else '' }}
     {% endfor %}
@@ -37,6 +38,9 @@ def {{ tool.name }}({% if tool.parameters %}
         {{ param.name }}={{ param.name }}{{ ',' if not loop.last else '' }}
         {% endfor %}
     )
+    # Handle both sync and async business logic
+    if inspect.isawaitable(result):
+        result = await result
     return str(result)
 {% endfor %}
 
