@@ -30,13 +30,12 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-]
 test = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
+]
+dev = [
+    "{{ project_name }}[test]",
 ]
 
 [project.scripts]
