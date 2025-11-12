@@ -29,6 +29,16 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
 [project.scripts]
 {{ project_name }} = "{{ package_name }}.server:main"
 {{ project_name }}-cli = "{{ package_name }}.cli:main"

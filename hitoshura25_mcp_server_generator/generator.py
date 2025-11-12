@@ -229,8 +229,7 @@ def generate_mcp_server(
         # For in-place generation, check for conflicting files instead of directory
         conflicting_files = [
             'pyproject.toml', 'setup.py', 'README.md',
-            'MCP-USAGE.md', 'LICENSE', 'requirements.txt',
-            'MANIFEST.in', '.gitignore'
+            'MCP-USAGE.md', 'LICENSE', 'MANIFEST.in', '.gitignore'
         ]
         existing = [f for f in conflicting_files if os.path.exists(os.path.join(project_path, f))]
 
@@ -309,7 +308,6 @@ def generate_mcp_server(
         ('LICENSE.j2', 'LICENSE'),
         ('setup.py.j2', 'setup.py'),
         ('pyproject.toml.j2', 'pyproject.toml'),
-        ('requirements.txt.j2', 'requirements.txt'),
         ('MANIFEST.in.j2', 'MANIFEST.in'),
         ('.gitignore.j2', '.gitignore'),
 

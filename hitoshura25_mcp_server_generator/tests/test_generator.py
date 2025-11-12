@@ -142,6 +142,19 @@ def test_generate_mcp_server_success(tmp_path):
     assert (project_path / "test_server" / "cli.py").exists()
     assert (project_path / "test_server" / "generator.py").exists()
 
+    # Verify requirements.txt is NOT created (migration to pyproject.toml)
+    assert not (project_path / "requirements.txt").exists()
+
+    # Verify pyproject.toml contains dependencies
+    pyproject_path = project_path / "pyproject.toml"
+    assert pyproject_path.exists()
+    pyproject_content = pyproject_path.read_text()
+    assert "dependencies = [" in pyproject_content
+    assert "mcp>=1.0.0,<2.0.0" in pyproject_content
+    assert "[project.optional-dependencies]" in pyproject_content
+    assert "pytest>=7.0.0" in pyproject_content
+    assert "pytest-asyncio>=0.21.0" in pyproject_content
+
 
 def test_generate_mcp_server_invalid_project_name():
     """Test that invalid project names raise ValueError."""
