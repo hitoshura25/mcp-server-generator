@@ -4,6 +4,8 @@ Core MCP server generation logic.
 
 import os
 import keyword
+from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 from jinja2 import Environment, FileSystemLoader
 from .git_utils import apply_prefix
@@ -136,6 +138,209 @@ def sanitize_description(text: str) -> str:
     return text.replace('{', '{{').replace('}', '}}')
 
 
+def merge_gitignore(existing_path: str, template_content: str) -> Dict[str, Any]:
+    """
+    Merge .gitignore files by appending unique entries.
+
+    Args:
+        existing_path: Path to existing .gitignore
+        template_content: Content from template
+
+    Returns:
+        dict with 'added', 'skipped', 'total' counts
+    """
+    try:
+        existing_content = Path(existing_path).read_text()
+    except UnicodeDecodeError:
+        # Try different encoding
+        try:
+            existing_content = Path(existing_path).read_text(encoding='latin-1')
+        except Exception:
+            print(f"Warning: Could not read {existing_path}, treating as empty")
+            existing_content = ""
+    except Exception as e:
+        print(f"Warning: Error reading {existing_path}: {e}")
+        existing_content = ""
+
+    # Read existing file
+    existing_lines = set(line.strip() for line in existing_content.splitlines())
+
+    # Parse template
+    template_lines = [line.strip() for line in template_content.splitlines()]
+
+    # Find new unique entries
+    new_entries = []
+    for line in template_lines:
+        stripped = line.strip()
+        # Always add comments and empty lines for structure
+        if not stripped or stripped.startswith('#'):
+            new_entries.append(line)
+        # Only add patterns if not already present
+        elif stripped not in existing_lines:
+            new_entries.append(line)
+            existing_lines.add(stripped)
+
+    if new_entries:
+        # Append with clear delimiter
+        merged_content = existing_content.rstrip('\n') + '\n\n'
+        merged_content += f'# Added by MCP Generator on {datetime.now().strftime("%Y-%m-%d")}\n'
+        merged_content += '\n'.join(new_entries) + '\n'
+
+        Path(existing_path).write_text(merged_content)
+
+    return {
+        'added': len([e for e in new_entries if e.strip() and not e.strip().startswith('#')]),
+        'skipped': len(template_lines) - len(new_entries),
+        'total': len(template_lines)
+    }
+
+
+def merge_manifest(existing_path: str, template_content: str) -> Dict[str, Any]:
+    """
+    Merge MANIFEST.in files by appending unique include patterns.
+
+    Args:
+        existing_path: Path to existing MANIFEST.in
+        template_content: Content from template
+
+    Returns:
+        dict with 'added', 'skipped' counts
+    """
+    existing_content = Path(existing_path).read_text()
+    existing_lines = set(line.strip() for line in existing_content.splitlines())
+
+    template_lines = [line.strip() for line in template_content.splitlines()]
+
+    new_entries = []
+    for line in template_lines:
+        stripped = line.strip()
+        # Keep comments and structure
+        if not stripped or stripped.startswith('#'):
+            new_entries.append(line)
+        # Only add if not present
+        elif stripped not in existing_lines:
+            new_entries.append(line)
+            existing_lines.add(stripped)
+
+    if new_entries:
+        merged_content = existing_content.rstrip('\n') + '\n\n'
+        merged_content += f'# Added by MCP Generator on {datetime.now().strftime("%Y-%m-%d")}\n'
+        merged_content += '\n'.join(new_entries) + '\n'
+
+        Path(existing_path).write_text(merged_content)
+
+    return {
+        'added': len([e for e in new_entries if e.strip() and not e.strip().startswith('#')]),
+        'skipped': len(template_lines) - len(new_entries)
+    }
+
+
+def append_to_readme(existing_path: str, template_content: str, project_name: str) -> Dict[str, Any]:
+    """
+    Append generated README content to existing file with clear delimiter.
+
+    Args:
+        existing_path: Path to existing README.md
+        template_content: Content from template
+        project_name: Project name for marker
+
+    Returns:
+        dict with 'appended' status and line number
+    """
+    existing_content = Path(existing_path).read_text()
+
+    # Check if already appended (avoid duplicates)
+    marker = f'<!-- MCP-GENERATOR-CONTENT-START:{project_name} -->'
+    if marker in existing_content:
+        return {'appended': False, 'reason': 'Already contains generated content'}
+
+    # Check file size
+    file_size = os.path.getsize(existing_path)
+    if file_size > 1_000_000:  # 1MB
+        return {
+            'appended': False,
+            'reason': f'File too large ({file_size/1024:.1f}KB), skipping to avoid unwieldy file'
+        }
+
+    # Append with clear delimiters
+    delimiter_start = f'\n\n---\n\n{marker}\n'
+    delimiter_end = f'\n<!-- MCP-GENERATOR-CONTENT-END:{project_name} -->\n'
+
+    note = (
+        f'> **Note:** The following content was generated by MCP Generator on '
+        f'{datetime.now().strftime("%Y-%m-%d %H:%M")}.\n'
+        f'> You can edit, move, or remove this section as needed.\n\n'
+    )
+
+    appended_content = delimiter_start + note + template_content + delimiter_end
+
+    merged_content = existing_content.rstrip('\n') + appended_content
+
+    # Calculate line number where content was added
+    line_number = len(existing_content.splitlines()) + 1
+
+    Path(existing_path).write_text(merged_content)
+
+    return {
+        'appended': True,
+        'line_number': line_number,
+        'bytes_added': len(appended_content)
+    }
+
+
+def append_to_mcp_usage(existing_path: str, template_content: str, project_name: str) -> Dict[str, Any]:
+    """
+    Append to MCP-USAGE.md with clear delimiters.
+
+    Args:
+        existing_path: Path to existing MCP-USAGE.md
+        template_content: Content from template
+        project_name: Project name for marker
+
+    Returns:
+        dict with 'appended' status and line number
+    """
+    existing_content = Path(existing_path).read_text()
+
+    # Check if already appended (avoid duplicates)
+    marker = f'<!-- MCP-GENERATOR-USAGE-START:{project_name} -->'
+    if marker in existing_content:
+        return {'appended': False, 'reason': 'Already contains generated content'}
+
+    # Check file size
+    file_size = os.path.getsize(existing_path)
+    if file_size > 1_000_000:  # 1MB
+        return {
+            'appended': False,
+            'reason': f'File too large ({file_size/1024:.1f}KB), skipping to avoid unwieldy file'
+        }
+
+    # Append with clear delimiters
+    delimiter_start = f'\n\n---\n\n{marker}\n'
+    delimiter_end = f'\n<!-- MCP-GENERATOR-USAGE-END:{project_name} -->\n'
+
+    note = (
+        f'> **Note:** The following content was generated by MCP Generator on '
+        f'{datetime.now().strftime("%Y-%m-%d %H:%M")}.\n'
+        f'> You can edit, move, or remove this section as needed.\n\n'
+    )
+
+    appended_content = delimiter_start + note + template_content + delimiter_end
+
+    merged_content = existing_content.rstrip('\n') + appended_content
+
+    # Calculate line number where content was added
+    line_number = len(existing_content.splitlines()) + 1
+
+    Path(existing_path).write_text(merged_content)
+
+    return {
+        'appended': True,
+        'line_number': line_number,
+        'bytes_added': len(appended_content)
+    }
+
+
 def generate_mcp_server(
     project_name: str,
     description: str,
@@ -226,24 +431,27 @@ def generate_mcp_server(
     # Otherwise, create a subdirectory named after the project
     if normalized_output == current_dir:
         project_path = os.getcwd()
-        # For in-place generation, check for conflicting files instead of directory
-        conflicting_files = [
-            'pyproject.toml', 'setup.py', 'README.md',
-            'MCP-USAGE.md', 'LICENSE', 'requirements.txt',
-            'MANIFEST.in', '.gitignore'
+        # For in-place generation, check only for CRITICAL conflicting files
+        # Other files (.gitignore, README.md, etc.) will be smartly merged
+        critical_files = [
+            'pyproject.toml',
+            'setup.py',
         ]
-        existing = [f for f in conflicting_files if os.path.exists(os.path.join(project_path, f))]
+
+        existing_critical = [f for f in critical_files
+                            if os.path.exists(os.path.join(project_path, f))]
 
         # Also check if package directory already exists
         if os.path.exists(os.path.join(project_path, package_name)):
-            existing.append(f'{package_name}/ directory')
+            existing_critical.append(f'{package_name}/ directory')
 
-        if existing:
+        if existing_critical:
             raise FileExistsError(
-                f"Cannot generate in-place: conflicting files exist: {', '.join(existing)}\n"
+                f"Cannot generate in-place: critical files exist: {', '.join(existing_critical)}\n"
+                f"These files are essential to project structure and cannot be safely merged.\n"
                 f"Solutions:\n"
                 f"  1. Use a different output directory (don't use '.')\n"
-                f"  2. Remove or backup the existing files\n"
+                f"  2. Remove or backup these files: {', '.join(existing_critical)}\n"
                 f"  3. Generate in a subdirectory by omitting --output-dir"
             )
     else:
@@ -309,7 +517,6 @@ def generate_mcp_server(
         ('LICENSE.j2', 'LICENSE'),
         ('setup.py.j2', 'setup.py'),
         ('pyproject.toml.j2', 'pyproject.toml'),
-        ('requirements.txt.j2', 'requirements.txt'),
         ('MANIFEST.in.j2', 'MANIFEST.in'),
         ('.gitignore.j2', '.gitignore'),
 
@@ -326,8 +533,11 @@ def generate_mcp_server(
     ]
 
     files_created = []
+    files_merged = []
+    files_appended = []
+    files_skipped = []
 
-    # Generate files
+    # Generate files with smart handling
     for template_file, output_file in files_to_generate:
         try:
             template = env.get_template(template_file)
@@ -336,12 +546,88 @@ def generate_mcp_server(
             output_path = os.path.join(project_path, output_file)
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+            # Determine handling strategy based on file
+            file_exists = os.path.exists(output_path)
 
-            files_created.append(output_file)
+            # Strategy 1: Smart merge for .gitignore
+            if output_file == '.gitignore' and file_exists:
+                result = merge_gitignore(output_path, content)
+                if result['added'] > 0:
+                    files_merged.append(f".gitignore ({result['added']} entries added)")
+                else:
+                    files_skipped.append(".gitignore (no new entries)")
+
+            # Strategy 2: Smart merge for MANIFEST.in
+            elif output_file == 'MANIFEST.in' and file_exists:
+                result = merge_manifest(output_path, content)
+                if result['added'] > 0:
+                    files_merged.append(f"MANIFEST.in ({result['added']} patterns added)")
+                else:
+                    files_skipped.append("MANIFEST.in (no new patterns)")
+
+            # Strategy 3: Append to README.md
+            elif output_file == 'README.md' and file_exists:
+                result = append_to_readme(output_path, content, project_name)
+                if result['appended']:
+                    files_appended.append(f"README.md (line {result['line_number']})")
+                else:
+                    files_skipped.append(f"README.md ({result['reason']})")
+
+            # Strategy 4: Append to MCP-USAGE.md
+            elif output_file == 'MCP-USAGE.md' and file_exists:
+                result = append_to_mcp_usage(output_path, content, project_name)
+                if result['appended']:
+                    files_appended.append(f"MCP-USAGE.md (line {result['line_number']})")
+                else:
+                    files_skipped.append(f"MCP-USAGE.md ({result['reason']})")
+
+            # Strategy 5: Skip LICENSE if exists
+            elif output_file == 'LICENSE' and file_exists:
+                files_skipped.append("LICENSE (preserving existing)")
+
+            # Default: Create file normally
+            else:
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                files_created.append(output_file)
+
         except Exception as e:
             raise RuntimeError(f"Failed to generate {output_file}: {str(e)}")
+
+    # Print generation summary
+    summary_parts = []
+    if files_created:
+        summary_parts.append(f"Created {len(files_created)} files")
+    if files_merged:
+        summary_parts.append(f"Merged {len(files_merged)} files")
+    if files_appended:
+        summary_parts.append(f"Appended to {len(files_appended)} files")
+    if files_skipped:
+        summary_parts.append(f"Skipped {len(files_skipped)} files")
+
+    print(f"\n{'='*60}")
+    print(f"Generation Summary: {', '.join(summary_parts)}")
+    print(f"{'='*60}")
+
+    if files_merged:
+        print("\nMerged files:")
+        for f in files_merged:
+            print(f"  ✓ {f}")
+
+    if files_appended:
+        print("\nAppended to files (please review):")
+        for f in files_appended:
+            print(f"  ⚠ {f}")
+
+    if files_skipped:
+        print("\nSkipped files:")
+        for f in files_skipped:
+            print(f"  ⊘ {f}")
+
+    if files_appended:
+        print("\n⚠️  Please review appended files and edit as needed.")
+
+    print(f"{'='*60}\n")
 
     # Generate GitHub Actions workflow (required)
     try:
@@ -376,5 +662,8 @@ def generate_mcp_server(
         'success': True,
         'project_path': project_path,
         'files_created': files_created,
+        'files_merged': files_merged,
+        'files_appended': files_appended,
+        'files_skipped': files_skipped,
         'message': f"Successfully generated MCP server project at {project_path}"
     }

@@ -41,7 +41,7 @@ def test_all_templates_render(tmp_path):
 
     templates = [
         'README.md.j2', 'LICENSE.j2', '.gitignore.j2', 'MCP-USAGE.md.j2',
-        'setup.py.j2', 'pyproject.toml.j2', 'requirements.txt.j2', 'MANIFEST.in.j2',
+        'setup.py.j2', 'pyproject.toml.j2', 'MANIFEST.in.j2',
         '__init__.py.j2', 'server.py.j2', 'cli.py.j2', 'generator.py.j2',
         'tests/__init__.py.j2', 'tests/test_server.py.j2', 'tests/test_generator.py.j2'
     ]
