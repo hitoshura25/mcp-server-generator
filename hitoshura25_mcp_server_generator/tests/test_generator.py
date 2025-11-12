@@ -289,16 +289,16 @@ def test_generate_mcp_server_in_place(tmp_path):
 
 
 def test_generate_mcp_server_in_place_conflict(tmp_path):
-    """Test that in-place generation fails if conflicting files exist."""
-    
+    """Test that in-place generation fails if critical files exist."""
+
     original_dir = os.getcwd()
     os.chdir(tmp_path)
 
     try:
-        # Create a conflicting file
+        # Create a critical file
         (tmp_path / "pyproject.toml").write_text("existing content")
 
-        with pytest.raises(FileExistsError, match="conflicting files exist"):
+        with pytest.raises(FileExistsError, match="critical files exist"):
             generate_mcp_server(
                 project_name="test-server",
                 description="Test",
@@ -331,3 +331,191 @@ def test_generate_mcp_server_with_output_dir(tmp_path):
     assert project_dir.exists()
     assert (project_dir / "README.md").exists()
     assert (project_dir / "pyproject.toml").exists()
+
+
+def test_merge_gitignore_new_entries(tmp_path):
+    """Test merging .gitignore adds unique entries."""
+    from hitoshura25_mcp_server_generator.generator import merge_gitignore
+
+    existing = tmp_path / ".gitignore"
+    existing.write_text("*.pyc\n__pycache__/\n")
+
+    template = "*.pyc\n__pycache__/\n.venv/\ndist/\n"
+
+    result = merge_gitignore(str(existing), template)
+
+    assert result['added'] == 2  # .venv/ and dist/
+    assert result['skipped'] > 0
+
+    content = existing.read_text()
+    assert '.venv/' in content
+    assert 'dist/' in content
+    # Original content preserved
+    assert '*.pyc' in content
+    assert '__pycache__/' in content
+
+
+def test_merge_gitignore_no_duplicates(tmp_path):
+    """Test merging .gitignore avoids duplicates."""
+    from hitoshura25_mcp_server_generator.generator import merge_gitignore
+
+    existing = tmp_path / ".gitignore"
+    existing.write_text("*.pyc\n.venv/\n")
+
+    template = "*.pyc\n.venv/\n"
+
+    result = merge_gitignore(str(existing), template)
+
+    assert result['added'] == 0
+
+    content = existing.read_text()
+    # Should not have duplicate entries
+    assert content.count('*.pyc') == 1
+    assert content.count('.venv/') == 1
+
+
+def test_merge_manifest(tmp_path):
+    """Test merging MANIFEST.in adds unique patterns."""
+    from hitoshura25_mcp_server_generator.generator import merge_manifest
+
+    existing = tmp_path / "MANIFEST.in"
+    existing.write_text("include README.md\ninclude LICENSE\n")
+
+    template = "include README.md\ninclude LICENSE\ninclude *.txt\n"
+
+    result = merge_manifest(str(existing), template)
+
+    assert result['added'] == 1  # include *.txt
+    assert result['skipped'] > 0
+
+    content = existing.read_text()
+    assert 'include *.txt' in content
+    assert 'include README.md' in content
+    assert 'include LICENSE' in content
+
+
+def test_append_to_readme(tmp_path):
+    """Test appending to README with delimiters."""
+    from hitoshura25_mcp_server_generator.generator import append_to_readme
+
+    existing = tmp_path / "README.md"
+    existing.write_text("# My Project\n\nCustom content here.\n")
+
+    template = "## Generated Section\n\nThis is generated.\n"
+
+    result = append_to_readme(str(existing), template, "test-project")
+
+    assert result['appended'] == True
+    assert result['line_number'] > 0
+
+    content = existing.read_text()
+    assert "Custom content here" in content  # Preserved
+    assert "Generated Section" in content  # Added
+    assert "MCP-GENERATOR-CONTENT-START" in content  # Delimiter
+    assert "MCP-GENERATOR-CONTENT-END" in content
+
+
+def test_append_to_readme_already_appended(tmp_path):
+    """Test that appending twice doesn't duplicate."""
+    from hitoshura25_mcp_server_generator.generator import append_to_readme
+
+    existing = tmp_path / "README.md"
+    content = "# Test\n<!-- MCP-GENERATOR-CONTENT-START:test-project -->\nOld\n<!-- MCP-GENERATOR-CONTENT-END:test-project -->\n"
+    existing.write_text(content)
+
+    template = "New content\n"
+
+    result = append_to_readme(str(existing), template, "test-project")
+
+    assert result['appended'] == False
+    assert 'Already contains' in result['reason']
+
+
+def test_append_to_mcp_usage(tmp_path):
+    """Test appending to MCP-USAGE.md with delimiters."""
+    from hitoshura25_mcp_server_generator.generator import append_to_mcp_usage
+
+    existing = tmp_path / "MCP-USAGE.md"
+    existing.write_text("# Usage\n\nCustom usage here.\n")
+
+    template = "## Generated Usage\n\nThis is generated.\n"
+
+    result = append_to_mcp_usage(str(existing), template, "test-project")
+
+    assert result['appended'] == True
+    assert result['line_number'] > 0
+
+    content = existing.read_text()
+    assert "Custom usage here" in content  # Preserved
+    assert "Generated Usage" in content  # Added
+    assert "MCP-GENERATOR-USAGE-START" in content  # Delimiter
+    assert "MCP-GENERATOR-USAGE-END" in content
+
+
+def test_generate_with_smart_merge(tmp_path):
+    """Test full generation with smart merge."""
+    # Create existing files
+    (tmp_path / ".gitignore").write_text("*.pyc\n")
+    (tmp_path / "README.md").write_text("# Custom README\n\nMy custom content.\n")
+    (tmp_path / "LICENSE").write_text("MIT License\nCustom text\n")
+
+    # Change to temp directory for in-place generation
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        result = generate_mcp_server(
+            project_name="test-server",
+            description="Test",
+            author="Test",
+            author_email="test@test.com",
+            tools=[{"name": "test", "description": "Test", "parameters": []}],
+            output_dir=".",
+            prefix="NONE"
+        )
+
+        assert result['success']
+        assert len(result['files_merged']) > 0  # .gitignore merged
+        assert len(result['files_appended']) > 0  # README appended
+        assert len(result['files_skipped']) > 0  # LICENSE skipped
+
+        # Verify .gitignore was merged
+        gitignore = (tmp_path / ".gitignore").read_text()
+        assert "*.pyc" in gitignore  # Original preserved
+
+        # Verify README was appended
+        readme = (tmp_path / "README.md").read_text()
+        assert "Custom README" in readme  # Original preserved
+        assert "My custom content" in readme
+        assert "MCP-GENERATOR-CONTENT" in readme  # New content added
+
+        # Verify LICENSE was skipped (not overwritten)
+        license_file = (tmp_path / "LICENSE").read_text()
+        assert "Custom text" in license_file
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_generate_errors_on_critical_files(tmp_path):
+    """Test that critical files still cause errors."""
+    # Change to temp dir
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Create critical file
+        (tmp_path / "pyproject.toml").write_text("[project]\nname = 'test'\n")
+
+        with pytest.raises(FileExistsError, match="critical files exist"):
+            generate_mcp_server(
+                project_name="test-server",
+                description="Test",
+                author="Test",
+                author_email="test@test.com",
+                tools=[{"name": "test", "description": "Test", "parameters": []}],
+                output_dir=".",
+                prefix="NONE"
+            )
+    finally:
+        os.chdir(original_dir)
