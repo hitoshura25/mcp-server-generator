@@ -3,6 +3,11 @@
 CLI for {{ project_name }}.
 
 {{ description }}
+
+Security Notes:
+    CLI arguments are user-controlled and should be validated.
+    The generator functions should handle validation, but you can
+    add additional CLI-level validation here if needed.
 """
 
 import sys
@@ -12,6 +17,9 @@ from .generator import (
     {{ tool.name }},
     {% endfor %}
 )
+
+# Uncomment to add CLI-level input validation
+# from .security_utils import validate_string_input, validate_numeric_input
 
 
 def main():

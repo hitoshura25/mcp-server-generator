@@ -649,6 +649,7 @@ def generate_mcp_server(
         ("README.md.j2", "README.md"),
         ("MCP-USAGE.md.j2", "MCP-USAGE.md"),
         ("SECURITY.md.j2", "SECURITY.md"),
+        ("SECURITY_EXAMPLES.md.j2", "SECURITY_EXAMPLES.md"),
         ("LICENSE.j2", "LICENSE"),
         ("setup.py.j2", "setup.py"),
         ("pyproject.toml.j2", "pyproject.toml"),

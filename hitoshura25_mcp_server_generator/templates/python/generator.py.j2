@@ -2,9 +2,26 @@
 Core business logic for {{ project_name }}.
 
 {{ description }}
+
+Security Notes:
+    - Always validate and sanitize inputs
+    - Use security_utils for common security patterns
+    - Review SECURITY.md for comprehensive guidelines
 """
 
 from typing import Any, Dict
+
+# Import security utilities - uncomment and use as needed
+# from .security_utils import (
+#     validate_string_input,
+#     validate_numeric_input,
+#     validate_safe_path,
+#     validate_safe_command,
+#     redact_sensitive_data,
+#     secure_tool,
+#     with_rate_limit,
+#     audit_log,
+# )
 
 {% for tool in tools %}
 
@@ -24,25 +41,68 @@ def {{ tool.name }}(
     Returns:
         Result dictionary
 
-    Note:
-        This function is currently synchronous. If you need to perform async
-        operations (API calls, database queries, subprocess execution), you can
-        make this function async by:
+    Security:
+        IMPORTANT: Review SECURITY.md before implementing this function.
 
-        1. Change the function signature to: async def {{ tool.name }}(...)
-        2. Use 'await' for async operations instead of asyncio.run()
+        For secure implementation:
+        - Validate ALL inputs using validate_string_input() or validate_numeric_input()
+        - For file operations: Use validate_safe_path() to prevent path traversal
+        - For commands: Use validate_safe_command() with whitelisting
+        - For sensitive data: Use redact_sensitive_data() before returning
+        - Add @audit_log decorator for security logging
+        - Add @with_rate_limit decorator to prevent abuse
+        - Or use @secure_tool to apply multiple protections at once
+
+    Async Support:
+        This function is currently synchronous. For async operations
+        (API calls, database queries, subprocess execution):
+
+        1. Change to: async def {{ tool.name }}(...)
+        2. Use 'await' for async operations
 
         Example:
+            @audit_log  # Log all calls
+            @with_rate_limit(max_requests=50, window_seconds=60)  # Rate limit
             async def {{ tool.name }}(...) -> Dict[str, Any]:
+                # Validate inputs
+                from .security_utils import validate_string_input
+                validated_input = validate_string_input(
+                    some_param,
+                    max_length=500,
+                    allowed_pattern=r'^[a-zA-Z0-9\s\-_\.]+$'
+                )
+
+                # Your async logic here
                 import httpx
                 async with httpx.AsyncClient() as client:
                     response = await client.get("https://api.example.com/data")
                     data = response.json()
-                return {'success': True, 'data': data}
 
-        The MCP server handlers will automatically detect and await async functions.
+                return {'success': True, 'data': data}
     """
     # TODO: Implement {{ tool.name }} logic
+    #
+    # SECURITY CHECKLIST:
+    # [ ] Validate all inputs
+    # [ ] Apply rate limiting if needed
+    # [ ] Add audit logging for security-relevant operations
+    # [ ] Redact sensitive data from outputs
+    # [ ] Use path/command validation for file/system operations
+    # [ ] Set timeouts for long-running operations
+    # [ ] Handle errors without leaking sensitive information
+    #
+    # Example with security:
+    # from .security_utils import validate_string_input, audit_log
+    #
+    # {% for param in tool.parameters %}{% if param.type in ['string', 'str'] %}# Validate {{ param.name }}
+    # {{ param.name }} = validate_string_input(
+    #     {{ param.name }},
+    #     max_length=1000,
+    #     allowed_pattern=r'^[a-zA-Z0-9\s\-_\.]+$',
+    #     field_name='{{ param.name }}'
+    # )
+    # {% endif %}{% endfor %}
+
     return {
         'success': True,
         'message': 'TODO: Implement {{ tool.name }}',
