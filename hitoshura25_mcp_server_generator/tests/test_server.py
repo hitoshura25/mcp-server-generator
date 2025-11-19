@@ -184,6 +184,27 @@ def test_search_tools_with_query():
     assert "generate_mcp_server" in tool_names
 
 
+def test_search_tools_bootstrapping():
+    """Test that search_tools can find itself and get_tool_info (bootstrapping)."""
+    from hitoshura25_mcp_server_generator.server import search_tools
+
+    # Search for discovery tools
+    result_json = search_tools(query="discovery", detail_level="summary")
+    data = json.loads(result_json)
+
+    tool_names = [match["name"] for match in data["matches"]]
+
+    # Verify search_tools can find itself
+    assert "search_tools" in tool_names
+    # Verify it can also find get_tool_info
+    assert "get_tool_info" in tool_names
+
+    # Verify they have the correct category
+    for match in data["matches"]:
+        if match["name"] in ["search_tools", "get_tool_info"]:
+            assert match["category"] == "discovery"
+
+
 def test_search_tools_detail_levels():
     """Test different detail levels for search_tools."""
     from hitoshura25_mcp_server_generator.server import search_tools

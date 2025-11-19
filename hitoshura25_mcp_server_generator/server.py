@@ -21,6 +21,43 @@ mcp = FastMCP("mcp-server-generator")
 
 # Tool definitions for progressive disclosure
 TOOL_CATALOG = {
+    "search_tools": {
+        "name": "search_tools",
+        "category": "discovery",
+        "description": "Search for relevant tools by query with progressive disclosure",
+        "use_cases": [
+            "Finding tools without loading full schemas",
+            "Context-efficient tool discovery",
+            "Searching by keywords, categories, or use cases",
+        ],
+        "full_description": """Search for tools using progressive disclosure pattern.
+
+This tool allows you to discover available tools without loading all schemas upfront,
+saving context window space. Supports three detail levels:
+- "name": Just tool names (most efficient)
+- "summary": Names + descriptions + categories
+- "full": Complete information including use cases and detailed descriptions
+
+Search matches against tool names, descriptions, categories, and use cases.""",
+    },
+    "get_tool_info": {
+        "name": "get_tool_info",
+        "category": "discovery",
+        "description": "Get information about a specific tool with configurable detail levels",
+        "use_cases": [
+            "Learning about a specific tool",
+            "Getting tool details at different granularity levels",
+            "Understanding tool capabilities before use",
+        ],
+        "full_description": """Get detailed information about a specific tool with progressive disclosure.
+
+Supports two detail levels:
+- "summary": Name, description, and category
+- "full": Complete information including use cases and full description
+
+This allows you to get exactly the level of detail you need without loading
+unnecessary information into your context window.""",
+    },
     "generate_mcp_server": {
         "name": "generate_mcp_server",
         "category": "generation",
@@ -89,9 +126,10 @@ Creates .claude/commands/ directory with slash command files that:
 Covers:
 - Progressive disclosure strategies
 - Context-efficient tool design
+- Control flow optimization
 - Privacy and security considerations
 - State management and skills
-- Control flow optimization""",
+- Testing strategies""",
     },
     "get_implementation_guide": {
         "name": "get_implementation_guide",
@@ -127,7 +165,7 @@ def search_tools(
         query: Search query (matches against name, description, categories, use cases)
         detail_level: Level of detail to return:
             - "name": Just tool names (most context-efficient)
-            - "summary": Names + descriptions
+            - "summary": Names + descriptions + categories
             - "full": Complete information including use cases and detailed descriptions
 
     Returns:
@@ -211,7 +249,8 @@ def get_best_practices(topic: Optional[str] = None) -> str:
 
     Args:
         topic: Optional specific topic (e.g., "progressive_disclosure", "tool_design",
-               "security", "testing"). If None, returns all best practices.
+               "control_flow", "security", "state_management", "testing").
+               If None, returns all best practices.
 
     Returns:
         JSON string with best practices information
@@ -308,8 +347,8 @@ def get_implementation_guide(step: Optional[str] = None) -> str:
     """Get step-by-step guide for implementing MCP servers
 
     Args:
-        step: Optional specific step (e.g., "setup", "implementation", "testing", "deployment").
-              If None, returns overview of all steps.
+        step: Optional specific step (e.g., "setup", "implementation", "testing",
+              "deployment", "integration"). If None, returns overview of all steps.
 
     Returns:
         JSON string with implementation guide
