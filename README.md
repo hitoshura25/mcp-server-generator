@@ -311,7 +311,7 @@ pytest hitoshura25_mcp_server_generator/tests/test_server.py -v
 
 - Python ≥3.8
 - Jinja2 ≥3.0
-- hitoshura25-pypi-workflow-generator ≥0.3.1
+- hitoshura25-pypi-workflow-generator ==0.6.0
 
 ## Development
 

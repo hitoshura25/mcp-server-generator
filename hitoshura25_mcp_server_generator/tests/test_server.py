@@ -4,7 +4,11 @@ Tests for MCP server functionality.
 
 import json
 import pytest
-from hitoshura25_mcp_server_generator.server import mcp, generate_mcp_server, validate_project_name
+from hitoshura25_mcp_server_generator.server import (
+    mcp,
+    generate_mcp_server,
+    validate_project_name,
+)
 
 
 @pytest.mark.asyncio
@@ -28,12 +32,12 @@ async def test_list_tools_schema_validation():
 
     # Verify each tool has required fields
     for tool in tools:
-        assert hasattr(tool, 'name')
-        assert hasattr(tool, 'description')
-        assert hasattr(tool, 'inputSchema')
+        assert hasattr(tool, "name")
+        assert hasattr(tool, "description")
+        assert hasattr(tool, "inputSchema")
         schema = tool.inputSchema
-        assert 'type' in schema
-        assert 'properties' in schema
+        assert "type" in schema
+        assert "properties" in schema
 
     # Check generate_mcp_server schema
     gen_tool = next(t for t in tools if t.name == "generate_mcp_server")
@@ -54,15 +58,9 @@ def test_generate_mcp_server_function(tmp_path):
         description="Test MCP server",
         author="Test Author",
         author_email="test@example.com",
-        tools=[
-            {
-                "name": "test_tool",
-                "description": "Test tool",
-                "parameters": []
-            }
-        ],
+        tools=[{"name": "test_tool", "description": "Test tool", "parameters": []}],
         output_dir=str(tmp_path),
-        prefix="NONE"
+        prefix="NONE",
     )
 
     # Result should be a JSON string
@@ -87,7 +85,7 @@ def test_generate_mcp_server_with_options(tmp_path):
         tools=[{"name": "func", "description": "Function", "parameters": []}],
         output_dir=str(tmp_path),
         python_version="3.11",
-        prefix="NONE"
+        prefix="NONE",
     )
 
     result = json.loads(result_json)
@@ -96,9 +94,11 @@ def test_generate_mcp_server_with_options(tmp_path):
     # Verify custom Python version in generated files
     # python_version affects both workflows AND package requirements
     pyproject_content = (tmp_path / "custom-mcp" / "pyproject.toml").read_text()
-    assert "requires-python = \">=3.11\"" in pyproject_content
+    assert 'requires-python = ">=3.11"' in pyproject_content
 
-    workflow_content = (tmp_path / "custom-mcp" / ".github" / "workflows" / "release.yml").read_text()
+    workflow_content = (
+        tmp_path / "custom-mcp" / ".github" / "workflows" / "release.yml"
+    ).read_text()
     assert "python_version: '3.11'" in workflow_content
 
 
@@ -110,7 +110,7 @@ def test_generate_mcp_server_invalid_name():
             description="Test",
             author="Test",
             author_email="test@test.com",
-            tools=[{"name": "test", "description": "Test", "parameters": []}]
+            tools=[{"name": "test", "description": "Test", "parameters": []}],
         )
 
 
@@ -122,7 +122,7 @@ def test_validate_project_name_valid():
     assert isinstance(result_json, str)
     data = json.loads(result_json)
 
-    assert data["valid"] == True
+    assert data["valid"]
     assert data["name"] == "my-mcp-server"
 
 
@@ -131,7 +131,7 @@ def test_validate_project_name_invalid():
     result_json = validate_project_name(name="class")  # Python keyword
 
     data = json.loads(result_json)
-    assert data["valid"] == False
+    assert not data["valid"]
     assert data["name"] == "class"
 
 
@@ -141,7 +141,7 @@ async def test_all_tools_have_descriptions():
     tools = await mcp.list_tools()
 
     for tool in tools:
-        assert hasattr(tool, 'description')
+        assert hasattr(tool, "description")
         assert tool.description
         assert len(tool.description) > 0
 

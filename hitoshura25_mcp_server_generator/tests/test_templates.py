@@ -9,41 +9,65 @@ from jinja2 import Environment, FileSystemLoader
 
 def test_all_templates_render(tmp_path):
     """Test that all templates render without errors."""
-    template_dir = 'hitoshura25_mcp_server_generator/templates/python'
+    template_dir = "hitoshura25_mcp_server_generator/templates/python"
     env = Environment(loader=FileSystemLoader(template_dir))
 
     context = {
-        'project_name': 'test-server',
-        'package_name': 'test_server',
-        'description': 'Test server',
-        'author': 'Test',
-        'author_email': 'test@test.com',
-        'python_version': '3.8',
-        'license': 'Apache-2.0',
-        'tools': [
+        "project_name": "test-server",
+        "package_name": "test_server",
+        "description": "Test server",
+        "author": "Test",
+        "author_email": "test@test.com",
+        "python_version": "3.8",
+        "license": "Apache-2.0",
+        "tools": [
             {
-                'name': 'test_func',
-                'description': 'Test',
-                'parameters': [
-                    {'name': 'arg', 'type': 'string', 'description': 'Arg', 'required': True}
-                ]
+                "name": "test_func",
+                "description": "Test",
+                "parameters": [
+                    {
+                        "name": "arg",
+                        "type": "string",
+                        "description": "Arg",
+                        "required": True,
+                    }
+                ],
             }
         ],
-        'tool_schemas': [generate_tool_schema({
-            'name': 'test_func',
-            'description': 'Test',
-            'parameters': [
-                {'name': 'arg', 'type': 'string', 'description': 'Arg', 'required': True}
-            ]
-        })],
-        'year': '2025',
+        "tool_schemas": [
+            generate_tool_schema(
+                {
+                    "name": "test_func",
+                    "description": "Test",
+                    "parameters": [
+                        {
+                            "name": "arg",
+                            "type": "string",
+                            "description": "Arg",
+                            "required": True,
+                        }
+                    ],
+                }
+            )
+        ],
+        "year": "2025",
     }
 
     templates = [
-        'README.md.j2', 'LICENSE.j2', '.gitignore.j2', 'MCP-USAGE.md.j2',
-        'setup.py.j2', 'pyproject.toml.j2', 'MANIFEST.in.j2',
-        '__init__.py.j2', 'server.py.j2', 'cli.py.j2', 'generator.py.j2',
-        'tests/__init__.py.j2', 'tests/test_server.py.j2', 'tests/test_generator.py.j2'
+        "README.md.j2",
+        "LICENSE.j2",
+        ".gitignore.j2",
+        "MCP-USAGE.md.j2",
+        "setup.py.j2",
+        "pyproject.toml.j2",
+        "MANIFEST.in.j2",
+        "__init__.py.j2",
+        "server.py.j2",
+        "cli.py.j2",
+        "generator.py.j2",
+        "tests/__init__.py.j2",
+        "tests/test_server.py.j2",
+        "tests/test_generator.py.j2",
     ]
 
     for template_name in templates:
@@ -61,9 +85,9 @@ def test_generated_python_syntax(tmp_path):
         author_email="test@test.com",
         tools=[{"name": "test", "description": "Test", "parameters": []}],
         output_dir=str(tmp_path),
-        prefix="NONE"
+        prefix="NONE",
     )
-    assert result['success'] == True
+    assert result["success"]
 
     project_path = tmp_path / "syntax-test"
 
@@ -87,9 +111,9 @@ def test_generated_files_contain_project_info(tmp_path):
         author_email="test@test.com",
         tools=[{"name": "func", "description": "Function", "parameters": []}],
         output_dir=str(tmp_path),
-        prefix="NONE"
+        prefix="NONE",
     )
-    assert result['success'] == True
+    assert result["success"]
 
     project_path = tmp_path / "content-test"
 
@@ -98,10 +122,16 @@ def test_generated_files_contain_project_info(tmp_path):
     assert "content-test" in readme
     assert "Content test server" in readme
 
-    # Check setup.py contains project name and author
+    # Check pyproject.toml contains project metadata (single source of truth)
+    pyproject = (project_path / "pyproject.toml").read_text()
+    assert "content-test" in pyproject
+    assert "Test Author" in pyproject
+    assert "test@test.com" in pyproject
+
+    # Check setup.py is minimal (only version logic)
     setup = (project_path / "setup.py").read_text()
-    assert "content-test" in setup
-    assert "Test Author" in setup
+    assert "local_scheme" in setup
+    assert "All metadata in pyproject.toml" in setup
 
     # Check author in LICENSE
     license_file = (project_path / "LICENSE").read_text()
