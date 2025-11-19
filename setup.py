@@ -28,7 +28,8 @@ setup(
     include_package_data=True,
     install_requires=[
         "Jinja2>=3.0",
-        "hitoshura25-pypi-workflow-generator>=0.3.1",
+        "hitoshura25-pypi-workflow-generator==0.6.0",
+        "mcp>=1.0.0,<2.0.0",
     ],
     python_requires=">=3.8",
     classifiers=[
