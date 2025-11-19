@@ -11,25 +11,29 @@ Generate complete, production-ready MCP (Model Context Protocol) servers that wo
 - **MCP Server Mode**: For AI agents (Claude Desktop, etc.)
 - **CLI Mode**: For developers
 
-**This tool is itself an MCP server**, enabling AI agents to generate other MCP servers! It demonstrates the dual-mode architecture pattern it creates.
+**This tool is itself an MCP server**, enabling AI agents to generate other MCP servers! It demonstrates the dual-mode architecture pattern it creates and implements progressive disclosure for context-efficient tool discovery.
 
 ## Why Use This?
 
 - ⚡ **Fast**: Generate a complete MCP server in under 5 minutes
 - 🏗️ **Complete**: Includes tests, documentation, packaging, and CI/CD
 - ✅ **Tested**: Generated servers have comprehensive test suites with high coverage
-- 🎯 **Best Practices**: Follows validated patterns from production MCP servers
+- 🎯 **Best Practices**: Follows validated patterns from production MCP servers with built-in guidance
 - 🔧 **Dual-Mode**: Works as both MCP server and CLI tool
+- 🧠 **Smart Discovery**: Progressive disclosure tools for context-efficient AI agent usage
 - 📦 **Ready to Publish**: GitHub Actions workflows included for PyPI publishing
 
 ## Features
 
 - ✅ **Dual-mode architecture** (MCP + CLI)
+- ✅ **Progressive disclosure tools** (context-efficient tool discovery for AI agents)
+- ✅ **Built-in guidance** (best practices and implementation guides)
+- ✅ **Claude Code integration** (generate slash commands for guided development)
 - ✅ **Async/await support** (async handlers for I/O operations, avoids event loop errors)
 - ✅ **Package prefix support** (avoid PyPI namespace conflicts with AUTO detection)
 - ✅ **Complete project scaffolding** (tests, docs, packaging)
 - ✅ **GitHub Actions workflows** (via pypi-workflow-generator)
-- ✅ **Comprehensive test suite** (27+ tests with high coverage)
+- ✅ **Comprehensive test suite** (92+ tests with high coverage)
 - ✅ **Type hints and documentation**
 - ✅ **Best practices enforcement**
 - ✅ **Minimal dependencies**
@@ -141,6 +145,86 @@ Configure mcp-server-generator as an MCP server in Claude Desktop to let Claude 
 ```
 
 **For detailed MCP configuration, see [MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)**
+
+## MCP Server Tools
+
+When used as an MCP server (in Claude Desktop or other MCP clients), mcp-server-generator provides powerful tools with **progressive disclosure** support - allowing AI agents to discover and use tools efficiently without loading all schemas upfront.
+
+### Discovery Tools
+
+**search_tools** - Find relevant tools by query
+- Search by keywords, categories, or use cases
+- Three detail levels for context efficiency:
+  - `name`: Just tool names (most efficient)
+  - `summary`: Names + descriptions + categories
+  - `full`: Complete information including use cases
+- Example: `search_tools(query="generate", detail_level="summary")`
+
+**get_tool_info** - Get detailed information about a specific tool
+- Two detail levels: `summary` or `full`
+- Progressive disclosure for context efficiency
+- Example: `get_tool_info(tool_name="generate_mcp_server", detail_level="full")`
+
+### Generation Tools
+
+**generate_mcp_server** - Generate complete MCP server projects
+- Creates dual-mode architecture (MCP + CLI)
+- Includes tests, documentation, and CI/CD workflows
+- Production-ready scaffolding with best practices
+- Supports async/await patterns
+
+**generate_claude_command** - Create Claude Code command files
+- Generates `.claude/commands/` directory structure
+- Creates slash commands for guided MCP development
+- Templates for common workflows: `mcp_generator`, `best_practices`, `implementation_helper`, `custom`
+- Enables guided development experience
+
+### Validation Tools
+
+**validate_project_name** - Validate project names
+- Check Python package compatibility
+- Avoid Python keyword conflicts
+- Ensure PyPI naming conventions
+
+### Guidance Tools
+
+**get_best_practices** - MCP development best practices
+- Progressive disclosure strategies
+- Context-efficient tool design
+- Control flow optimization
+- Security and privacy considerations
+- State management patterns
+- Testing strategies
+
+**get_implementation_guide** - Step-by-step implementation guide
+- Project setup and initialization
+- Tool implementation patterns
+- Testing strategies
+- Deployment and publishing
+- Claude Desktop integration
+
+### Why Progressive Disclosure?
+
+Progressive disclosure allows AI agents to:
+- Discover tools without loading full schemas upfront
+- Save context window space for actual work
+- Scale to hundreds or thousands of tools
+- Get exactly the level of detail needed
+
+**Example workflow (MCP tool invocations):**
+```
+# 1. Search for relevant tools
+search_tools(query="generate", detail_level="name")
+# Returns: ["generate_mcp_server", "generate_claude_command"]
+
+# 2. Get summary of specific tool
+get_tool_info(tool_name="generate_mcp_server", detail_level="summary")
+# Returns: name, description, category
+
+# 3. Get full details when ready to use
+get_tool_info(tool_name="generate_mcp_server", detail_level="full")
+# Returns: complete information including use cases and parameters
+```
 
 ## Package Prefix
 
@@ -303,8 +387,9 @@ pytest hitoshura25_mcp_server_generator/tests/test_server.py -v
 ```
 
 **Test Statistics:**
-- 27+ comprehensive tests covering all functionality
+- 92+ comprehensive tests covering all functionality
 - All async MCP protocol tests passing
+- Progressive disclosure and discovery tools tests passing
 - Template validation tests passing
 
 ## Requirements
@@ -381,3 +466,6 @@ Vinayak Menon
 ## Acknowledgments
 
 This project is based on patterns validated in [pypi-workflow-generator](https://pypi.org/project/pypi-workflow-generator/), a production MCP server for generating GitHub Actions workflows.
+
+Progressive disclosure implementation follows best practices from:
+- [Anthropic's MCP Engineering Blog: Code Execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp)
