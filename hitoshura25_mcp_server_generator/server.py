@@ -184,7 +184,10 @@ def get_tool_info(
     """
     if tool_name not in TOOL_CATALOG:
         return json.dumps(
-            {"error": f"Tool '{tool_name}' not found", "available_tools": list(TOOL_CATALOG.keys())},
+            {
+                "error": f"Tool '{tool_name}' not found",
+                "available_tools": list(TOOL_CATALOG.keys()),
+            },
             indent=2,
         )
 
@@ -315,7 +318,13 @@ def get_implementation_guide(step: Optional[str] = None) -> str:
         "overview": {
             "title": "MCP Server Implementation Overview",
             "description": "Complete workflow for building and deploying MCP servers",
-            "steps": ["setup", "implementation", "testing", "deployment", "integration"],
+            "steps": [
+                "setup",
+                "implementation",
+                "testing",
+                "deployment",
+                "integration",
+            ],
         },
         "setup": {
             "title": "Project Setup",

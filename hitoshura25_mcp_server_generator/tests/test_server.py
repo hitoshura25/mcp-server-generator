@@ -217,9 +217,7 @@ def test_get_tool_info_valid_tool():
     """Test getting information about a valid tool."""
     from hitoshura25_mcp_server_generator.server import get_tool_info
 
-    result_json = get_tool_info(
-        tool_name="generate_mcp_server", detail_level="summary"
-    )
+    result_json = get_tool_info(tool_name="generate_mcp_server", detail_level="summary")
     data = json.loads(result_json)
 
     assert data["name"] == "generate_mcp_server"
