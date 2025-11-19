@@ -24,10 +24,11 @@ def load_tools_from_file(filepath: str):
         )
 
     with open(path) as f:
-        if filepath.endswith('.json'):
+        if filepath.endswith(".json"):
             return json.load(f)
-        elif filepath.endswith(('.yaml', '.yml')):
+        elif filepath.endswith((".yaml", ".yml")):
             import yaml
+
             return yaml.safe_load(f)
         else:
             raise ValueError(
@@ -48,7 +49,9 @@ def interactive_mode():
             print("Project name cannot be empty.")
             continue
         if not validate_project_name(project_name):
-            print("Invalid project name. Use lowercase, alphanumeric, hyphens/underscores only.")
+            print(
+                "Invalid project name. Use lowercase, alphanumeric, hyphens/underscores only."
+            )
             print("Must be a valid Python identifier (no keywords).")
             continue
         break
@@ -85,7 +88,9 @@ def interactive_mode():
     tools = []
 
     while True:
-        tool_name = input(f"\nTool #{len(tools) + 1} name (or press Enter to finish): ").strip()
+        tool_name = input(
+            f"\nTool #{len(tools) + 1} name (or press Enter to finish): "
+        ).strip()
         if not tool_name:
             break
 
@@ -95,26 +100,30 @@ def interactive_mode():
         parameters = []
 
         while True:
-            param_name = input(f"    Parameter name (or press Enter to finish): ").strip()
+            param_name = input(
+                "    Parameter name (or press Enter to finish): "
+            ).strip()
             if not param_name:
                 break
 
-            param_type = input(f"    Type for {param_name} (string/number/boolean): ").strip()
+            param_type = input(
+                f"    Type for {param_name} (string/number/boolean): "
+            ).strip()
             param_desc = input(f"    Description for {param_name}: ").strip()
-            param_required = input(f"    Required? (y/n): ").strip().lower() == 'y'
+            param_required = input("    Required? (y/n): ").strip().lower() == "y"
 
-            parameters.append({
-                "name": param_name,
-                "type": param_type,
-                "description": param_desc,
-                "required": param_required
-            })
+            parameters.append(
+                {
+                    "name": param_name,
+                    "type": param_type,
+                    "description": param_desc,
+                    "required": param_required,
+                }
+            )
 
-        tools.append({
-            "name": tool_name,
-            "description": tool_desc,
-            "parameters": parameters
-        })
+        tools.append(
+            {"name": tool_name, "description": tool_desc, "parameters": parameters}
+        )
 
     if not tools:
         print("\nError: At least one tool must be defined.")
@@ -130,21 +139,23 @@ def interactive_mode():
             author_email=author_email,
             tools=tools,
             python_version=python_version,
-            prefix=prefix
+            prefix=prefix,
         )
 
         print(f"\n✅ {result['message']}")
-        print(f"\nFiles created:")
-        for file in result['files_created']:
+        print("\nFiles created:")
+        for file in result["files_created"]:
             print(f"  - {file}")
 
-        print(f"\nNext steps:")
+        print("\nNext steps:")
         print(f"  1. cd {project_name}")
-        print(f"  2. python3 -m venv venv")
-        print(f"  3. source venv/bin/activate  # or: venv\\Scripts\\activate on Windows")
-        print(f"  4. pip install -r requirements.txt")
-        print(f"  5. pytest")
-        print(f"  6. Implement tool logic in {project_name.replace('-', '_')}/generator.py")
+        print("  2. python3 -m venv venv")
+        print("  3. source venv/bin/activate  # or: venv\\Scripts\\activate on Windows")
+        print("  4. pip install -r requirements.txt")
+        print("  5. pytest")
+        print(
+            f"  6. Implement tool logic in {project_name.replace('-', '_')}/generator.py"
+        )
 
         return 0
 
@@ -156,7 +167,7 @@ def interactive_mode():
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Generate MCP servers with dual-mode architecture',
+        description="Generate MCP servers with dual-mode architecture",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -175,18 +186,29 @@ Examples:
 
   # With custom Python version
   %(prog)s -i --python-version 3.11
-        """
+        """,
     )
 
-    parser.add_argument('--project-name', help='Project name (e.g., my-mcp-server)')
-    parser.add_argument('--description', help='Project description')
-    parser.add_argument('--author', help='Author name')
-    parser.add_argument('--email', help='Author email')
-    parser.add_argument('--tools-file', help='JSON/YAML file with tool definitions')
-    parser.add_argument('--interactive', '-i', action='store_true', help='Interactive mode')
-    parser.add_argument('--output-dir', help='Output directory. Use "." to generate in current directory (in-place), or specify a path to create a subdirectory (default: current directory)')
-    parser.add_argument('--python-version', default='3.10', help='Python version (default: 3.10)')
-    parser.add_argument('--prefix', default='AUTO', help='Package prefix: AUTO (detect from git), NONE, or custom string (default: AUTO)')
+    parser.add_argument("--project-name", help="Project name (e.g., my-mcp-server)")
+    parser.add_argument("--description", help="Project description")
+    parser.add_argument("--author", help="Author name")
+    parser.add_argument("--email", help="Author email")
+    parser.add_argument("--tools-file", help="JSON/YAML file with tool definitions")
+    parser.add_argument(
+        "--interactive", "-i", action="store_true", help="Interactive mode"
+    )
+    parser.add_argument(
+        "--output-dir",
+        help='Output directory. Use "." to generate in current directory (in-place), or specify a path to create a subdirectory (default: current directory)',
+    )
+    parser.add_argument(
+        "--python-version", default="3.10", help="Python version (default: 3.10)"
+    )
+    parser.add_argument(
+        "--prefix",
+        default="AUTO",
+        help="Package prefix: AUTO (detect from git), NONE, or custom string (default: AUTO)",
+    )
 
     args = parser.parse_args()
 
@@ -195,7 +217,9 @@ Examples:
         return interactive_mode()
 
     # Validate required arguments for non-interactive mode
-    if not all([args.project_name, args.description, args.author, args.email, args.tools_file]):
+    if not all(
+        [args.project_name, args.description, args.author, args.email, args.tools_file]
+    ):
         parser.error(
             "The following arguments are required: "
             "--project-name, --description, --author, --email, --tools-file "
@@ -205,7 +229,9 @@ Examples:
     try:
         # Load tools
         tools_data = load_tools_from_file(args.tools_file)
-        tools = tools_data if isinstance(tools_data, list) else tools_data.get('tools', [])
+        tools = (
+            tools_data if isinstance(tools_data, list) else tools_data.get("tools", [])
+        )
 
         if not tools:
             print("Error: No tools found in file", file=sys.stderr)
@@ -220,20 +246,22 @@ Examples:
             tools=tools,
             output_dir=args.output_dir,
             python_version=args.python_version,
-            prefix=args.prefix
+            prefix=args.prefix,
         )
 
-        print(result['message'])
-        print(f"\nFiles created:")
-        for file in result['files_created']:
+        print(result["message"])
+        print("\nFiles created:")
+        for file in result["files_created"]:
             print(f"  - {file}")
 
-        print(f"\nNext steps:")
+        print("\nNext steps:")
         print(f"  1. cd {args.project_name}")
-        print(f"  2. python3 -m venv venv && source venv/bin/activate")
-        print(f"  3. pip install -r requirements.txt")
-        print(f"  4. pytest")
-        print(f"  5. Implement tool logic in {args.project_name.replace('-', '_')}/generator.py")
+        print("  2. python3 -m venv venv && source venv/bin/activate")
+        print("  3. pip install -r requirements.txt")
+        print("  4. pytest")
+        print(
+            f"  5. Implement tool logic in {args.project_name.replace('-', '_')}/generator.py"
+        )
 
         return 0
 

@@ -69,10 +69,7 @@ def validate_project_name(name: str) -> str:
         JSON string with validation result
     """
     is_valid = generator.validate_project_name(name)
-    result = {
-        "valid": is_valid,
-        "name": name
-    }
+    result = {"valid": is_valid, "name": name}
     return json.dumps(result, indent=2)
 
 

@@ -16,21 +16,21 @@ except FileNotFoundError:
 
 
 setup(
-    name='hitoshura25-mcp-server-generator',
-    author='Vinayak Menon',
-    author_email='vinayakmenon+pypi@users.noreply.github.com',
-    description='Generate dual-mode MCP servers with best practices',
+    name="hitoshura25-mcp-server-generator",
+    author="Vinayak Menon",
+    author_email="vinayakmenon+pypi@users.noreply.github.com",
+    description="Generate dual-mode MCP servers with best practices",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/hitoshura25/mcp-server-generator',
+    long_description_content_type="text/markdown",
+    url="https://github.com/hitoshura25/mcp-server-generator",
     use_scm_version={"local_scheme": local_scheme},
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'Jinja2>=3.0',
-        'hitoshura25-pypi-workflow-generator>=0.3.1',
+        "Jinja2>=3.0",
+        "hitoshura25-pypi-workflow-generator>=0.3.1",
     ],
-    python_requires='>=3.8',
+    python_requires=">=3.8",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -43,9 +43,9 @@ setup(
         "Programming Language :: Python :: 3.12",
     ],
     entry_points={
-        'console_scripts': [
-            'hitoshura25-mcp-server-generator=hitoshura25_mcp_server_generator.server:main',
-            'hitoshura25-mcp-server-generator-cli=hitoshura25_mcp_server_generator.cli:main',
+        "console_scripts": [
+            "hitoshura25-mcp-server-generator=hitoshura25_mcp_server_generator.server:main",
+            "hitoshura25-mcp-server-generator-cli=hitoshura25_mcp_server_generator.cli:main",
         ],
     },
 )

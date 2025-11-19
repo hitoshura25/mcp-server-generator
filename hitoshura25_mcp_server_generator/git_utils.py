@@ -32,53 +32,65 @@ def get_github_username() -> Optional[str]:
     # Priority 1: github.user config (most specific)
     try:
         result = subprocess.run(
-            ['git', 'config', '--get', 'github.user'],
+            ["git", "config", "--get", "github.user"],
             capture_output=True,
             text=True,
             check=True,
-            timeout=5
+            timeout=5,
         )
         username = result.stdout.strip()
         if username:
             return username
     # Gracefully handle missing git configuration - try next method
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        subprocess.TimeoutExpired,
+    ):
         pass
 
     # Priority 2: Parse from remote URL
     try:
         result = subprocess.run(
-            ['git', 'config', '--get', 'remote.origin.url'],
+            ["git", "config", "--get", "remote.origin.url"],
             capture_output=True,
             text=True,
             check=True,
-            timeout=5
+            timeout=5,
         )
         url = result.stdout.strip()
 
         # Match: git@github.com:username/repo.git
         # Or: https://github.com/username/repo.git
-        match = re.search(r'github\.com[:/]([^/]+)/', url)
+        match = re.search(r"github\.com[:/]([^/]+)/", url)
         if match:
             return match.group(1)
     # Gracefully handle missing git remote or configuration - try next method
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        subprocess.TimeoutExpired,
+    ):
         pass
 
     # Priority 3: user.name (sanitized to package-friendly format)
     try:
         result = subprocess.run(
-            ['git', 'config', '--get', 'user.name'],
+            ["git", "config", "--get", "user.name"],
             capture_output=True,
             text=True,
             check=True,
-            timeout=5
+            timeout=5,
         )
         name = result.stdout.strip()
         if name:
             return sanitize_username(name)
     # Gracefully handle missing git configuration - all methods exhausted
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        subprocess.TimeoutExpired,
+    ):
         pass
 
     return None
@@ -109,24 +121,21 @@ def sanitize_username(name: str) -> str:
     name = name.lower()
 
     # Replace spaces and dots with hyphens
-    name = name.replace(' ', '-').replace('.', '-')
+    name = name.replace(" ", "-").replace(".", "-")
 
     # Keep only alphanumeric characters and hyphens
-    name = re.sub(r'[^a-z0-9-]', '', name)
+    name = re.sub(r"[^a-z0-9-]", "", name)
 
     # Remove consecutive hyphens
-    name = re.sub(r'-+', '-', name)
+    name = re.sub(r"-+", "-", name)
 
     # Remove leading/trailing hyphens
-    name = name.strip('-')
+    name = name.strip("-")
 
     return name
 
 
-def apply_prefix(
-    base_name: str,
-    prefix: str = "AUTO"
-) -> tuple[str, str]:
+def apply_prefix(base_name: str, prefix: str = "AUTO") -> tuple[str, str]:
     """
     Apply prefix to package name.
 
@@ -169,6 +178,6 @@ def apply_prefix(
         package_name = f"{sanitized_prefix}-{base_name}"
 
     # Convert package name to import name (hyphens to underscores)
-    import_name = package_name.replace('-', '_')
+    import_name = package_name.replace("-", "_")
 
     return package_name, import_name
