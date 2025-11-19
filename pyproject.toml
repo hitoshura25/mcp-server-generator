@@ -49,3 +49,7 @@ hitoshura25-mcp-server-generator-cli = "hitoshura25_mcp_server_generator.cli:mai
 Homepage = "https://github.com/hitoshura25/mcp-server-generator"
 Repository = "https://github.com/hitoshura25/mcp-server-generator"
 Issues = "https://github.com/hitoshura25/mcp-server-generator/issues"
+
+[tool.setuptools.packages.find]
+include = ["hitoshura25_mcp_server_generator*"]
+exclude = ["specs*"]

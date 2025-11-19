@@ -122,10 +122,16 @@ def test_generated_files_contain_project_info(tmp_path):
     assert "content-test" in readme
     assert "Content test server" in readme
 
-    # Check setup.py contains project name and author
+    # Check pyproject.toml contains project metadata (single source of truth)
+    pyproject = (project_path / "pyproject.toml").read_text()
+    assert "content-test" in pyproject
+    assert "Test Author" in pyproject
+    assert "test@test.com" in pyproject
+
+    # Check setup.py is minimal (only version logic)
     setup = (project_path / "setup.py").read_text()
-    assert "content-test" in setup
-    assert "Test Author" in setup
+    assert "local_scheme" in setup
+    assert "All metadata in pyproject.toml" in setup
 
     # Check author in LICENSE
     license_file = (project_path / "LICENSE").read_text()
