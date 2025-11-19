@@ -211,8 +211,8 @@ Progressive disclosure allows AI agents to:
 - Scale to hundreds or thousands of tools
 - Get exactly the level of detail needed
 
-**Example workflow:**
-```python
+**Example workflow (MCP tool invocations):**
+```
 # 1. Search for relevant tools
 search_tools(query="generate", detail_level="name")
 # Returns: ["generate_mcp_server", "generate_claude_command"]
