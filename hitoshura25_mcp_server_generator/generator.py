@@ -529,7 +529,9 @@ def generate_mcp_server(
 
     if high_risk_tools or medium_risk_tools:
         print("\n📚 SECURITY RESOURCES:")
-        print("    - See SECURITY.md in your generated project for comprehensive guidelines")
+        print(
+            "    - See SECURITY.md in your generated project for comprehensive guidelines"
+        )
         print("    - Use security_utils.py for built-in security functions")
         print("    - Review: https://www.anthropic.com/news/disrupting-AI-espionage")
         print("=" * 60 + "\n")
