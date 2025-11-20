@@ -113,6 +113,7 @@ def validate_safe_path(
     Validate that a file path is within allowed directory.
 
     Protects against path traversal attacks like ../../../../etc/passwd
+    Also handles symlinks and case-insensitive filesystems correctly.
 
     Args:
         requested_path: User-provided path
@@ -126,12 +127,16 @@ def validate_safe_path(
         ValueError: If path is outside allowed directory
         FileNotFoundError: If must_exist=True and path doesn't exist
     """
-    # Resolve to absolute path
+    # Resolve to absolute paths
     allowed_dir = Path(allowed_directory).resolve()
     target_path = (allowed_dir / requested_path).resolve()
 
     # Check if resolved path is within allowed directory
-    if not str(target_path).startswith(str(allowed_dir)):
+    # Using relative_to() is more robust than string comparison
+    # as it properly handles symlinks and case-insensitive filesystems
+    try:
+        target_path.relative_to(allowed_dir)
+    except ValueError:
         logger.warning(f"Path traversal attempt blocked: {requested_path}")
         raise ValueError("Access denied: path outside allowed directory")
 
@@ -149,15 +154,21 @@ def validate_safe_path(
 def validate_safe_command(
     command_name: str,
     args: Optional[List[str]],
-    allowed_commands: Dict[str, List[str]]
+    allowed_commands: Dict[str, List[str]],
+    allowed_arg_pattern: Optional[str] = None
 ) -> List[str]:
     """
     Validate command against whitelist and check arguments for injection.
+
+    Uses both negative validation (checking for dangerous characters) and
+    positive validation (ensuring only safe characters are present).
 
     Args:
         command_name: Name of command to execute
         args: Optional list of arguments
         allowed_commands: Dict mapping command names to their base command lists
+        allowed_arg_pattern: Optional regex pattern for allowed argument characters.
+                           Default: alphanumeric, dash, underscore, dot, slash, space
 
     Returns:
         Complete command list ready for subprocess.run
@@ -173,11 +184,28 @@ def validate_safe_command(
 
     if args:
         # Check for shell metacharacters that could enable injection
-        dangerous_chars = [';', '&', '|', '$', '`', '\n', '(', ')', '{', '}', '<', '>']
+        # This is a comprehensive list including glob characters and escape sequences
+        dangerous_chars = [
+            ';', '&', '|', '$', '`', '\n', '(', ')', '{', '}',
+            '<', '>', '*', '?', '[', ']', '"', "'", '\\'
+        ]
+
+        # Default pattern: alphanumeric, dash, underscore, dot, slash, space
+        # Adjust this pattern based on your specific command's needs
+        if allowed_arg_pattern is None:
+            allowed_arg_pattern = r'^[a-zA-Z0-9\-_./ ]+$'
+
         for arg in args:
+            # Negative validation: check for dangerous characters
             if any(char in arg for char in dangerous_chars):
-                logger.warning(f"Blocked command injection attempt: {arg}")
+                logger.warning(f"Blocked command injection attempt (dangerous char): {arg}")
                 raise ValueError(f"Invalid argument contains shell metacharacters: {arg}")
+
+            # Positive validation: ensure only allowed characters
+            if not re.match(allowed_arg_pattern, arg):
+                logger.warning(f"Blocked command injection attempt (invalid chars): {arg}")
+                raise ValueError(f"Argument contains disallowed characters: {arg}")
+
         cmd.extend(args)
 
     return cmd
@@ -313,6 +341,9 @@ def redact_sensitive_data(text: str) -> str:
 
     This helps prevent accidental exposure of PII, credentials, etc.
 
+    NOTE: These are basic patterns and may produce false positives/negatives.
+    Adjust patterns based on your specific security requirements.
+
     Args:
         text: Text potentially containing sensitive data
 
@@ -320,11 +351,17 @@ def redact_sensitive_data(text: str) -> str:
         Text with sensitive patterns redacted
     """
     patterns = [
-        # Email addresses
-        (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL_REDACTED]'),
+        # Email addresses (fixed: [A-Za-z] instead of [A-Z|a-z])
+        (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b', '[EMAIL_REDACTED]'),
         # US SSN
         (r'\b\d{3}-\d{2}-\d{4}\b', '[SSN_REDACTED]'),
-        # Credit card numbers (basic pattern)
+        # Credit card numbers (basic pattern - may have false positives)
+        # NOTE: This is a simple pattern that matches 16-digit numbers.
+        # For production, consider:
+        # - Using Luhn algorithm validation
+        # - Handling 13, 14, 15, and 19-digit card numbers
+        # - Being more specific about separators
+        # This pattern may match transaction IDs and other non-card numbers.
         (r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b', '[CARD_REDACTED]'),
         # API keys (common patterns)
         (r'api[_-]?key[_-]?[=:]?\s*["\']?([a-zA-Z0-9_\-]{20,})', 'api_key=[REDACTED]'),
@@ -334,8 +371,8 @@ def redact_sensitive_data(text: str) -> str:
         (r'(sk|pk|rk)_(?:live|test)_[a-zA-Z0-9]{20,}', '[API_KEY_REDACTED]'),
         # AWS keys
         (r'AKIA[0-9A-Z]{16}', '[AWS_KEY_REDACTED]'),
-        # JWT tokens (basic pattern)
-        (r'eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*', '[JWT_REDACTED]'),
+        # JWT tokens (fixed: use + instead of * to require at least one character)
+        (r'eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+', '[JWT_REDACTED]'),
         # IP addresses (if you want to redact them)
         # (r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '[IP_REDACTED]'),
     ]

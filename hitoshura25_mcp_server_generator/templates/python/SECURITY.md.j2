@@ -181,36 +181,63 @@ def run_command(cmd: str) -> str:
 
 **✅ Secure**:
 ```python
+import re
 import subprocess
-from typing import List
+from typing import List, Optional
 
 ALLOWED_COMMANDS = {
     'git_status': ['git', 'status'],
     'list_files': ['ls', '-la'],
 }
 
-def run_safe_command(command_name: str, args: List[str] = None) -> str:
-    """Run only whitelisted commands with validated arguments."""
+def run_safe_command(
+    command_name: str,
+    args: List[str] = None,
+    allowed_arg_pattern: Optional[str] = None
+) -> str:
+    """
+    Run only whitelisted commands with validated arguments.
+
+    Uses both negative validation (checking for dangerous characters) and
+    positive validation (ensuring only safe characters are present).
+    """
     if command_name not in ALLOWED_COMMANDS:
         raise ValueError(f"Command not allowed: {command_name}")
 
     cmd = ALLOWED_COMMANDS[command_name].copy()
 
     if args:
-        # Validate arguments (no shell metacharacters)
+        # Comprehensive list of dangerous shell metacharacters
+        dangerous_chars = [
+            ';', '&', '|', '$', '`', '\n', '(', ')', '{', '}',
+            '<', '>', '*', '?', '[', ']', '"', "'", '\\'
+        ]
+
+        # Default: allow alphanumeric, dash, underscore, dot, slash, space
+        if allowed_arg_pattern is None:
+            allowed_arg_pattern = r'^[a-zA-Z0-9\-_./ ]+$'
+
         for arg in args:
-            if any(c in arg for c in [';', '&', '|', '$', '`', '\n']):
-                raise ValueError(f"Invalid argument: {arg}")
+            # Negative validation: check for dangerous characters
+            if any(c in arg for c in dangerous_chars):
+                raise ValueError(f"Invalid argument contains shell metacharacters: {arg}")
+
+            # Positive validation: ensure only allowed characters
+            if not re.match(allowed_arg_pattern, arg):
+                raise ValueError(f"Argument contains disallowed characters: {arg}")
+
         cmd.extend(args)
 
     result = subprocess.run(
         cmd,
-        shell=False,  # Never use shell=True
+        shell=False,  # NEVER use shell=True with user-supplied input
         capture_output=True,
         timeout=10  # Prevent hanging
     )
     return result.stdout.decode()
 ```
+
+**Note on `shell=True`**: While the guidance "NEVER use shell=True" is the safest default, the critical issue is whether user input reaches the shell unsanitized. If you must use `shell=True` for legitimate reasons (e.g., complex shell pipelines), ensure all arguments are from trusted sources and properly quoted/escaped. However, in almost all cases, you should use `shell=False` with a list of arguments.
 
 #### 4. Rate Limiting and Audit Logging
 

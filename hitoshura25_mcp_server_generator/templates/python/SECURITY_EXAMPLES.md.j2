@@ -153,7 +153,7 @@ def run_command(command_name: str, args: Optional[List[str]] = None) -> Dict[str
         # Execute without shell
         result = subprocess.run(
             cmd,
-            shell=False,  # NEVER use shell=True
+            shell=False,  # NEVER use shell=True with user-supplied input
             capture_output=True,
             timeout=30,  # Timeout to prevent hanging
             text=True

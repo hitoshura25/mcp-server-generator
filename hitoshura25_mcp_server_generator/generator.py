@@ -3,6 +3,7 @@ Core MCP server generation logic.
 """
 
 import os
+import re
 import keyword
 from datetime import datetime
 from pathlib import Path
@@ -80,39 +81,37 @@ def analyze_tool_security(tool_definition: Dict[str, Any]) -> Dict[str, Any]:
     description = tool_definition.get("description", "").lower()
     combined = f"{name} {description}"
 
-    # High-risk patterns
+    # High-risk patterns - more specific to reduce false positives
+    # Using word boundaries and specific combinations
     high_risk_patterns = [
-        ("execute", "command execution"),
-        ("exec", "command execution"),
-        ("shell", "shell access"),
-        ("system", "system command"),
-        ("subprocess", "subprocess execution"),
-        ("eval", "code evaluation"),
-        ("compile", "code compilation"),
+        (r"\b(execute|exec)(_|-|command|cmd|shell|process)\b", "command execution"),
+        (r"\bshell(_|-|exec|command|run)\b", "shell access"),
+        (r"\brun(_|-|command|cmd|shell|process)\b", "command execution"),
+        (r"\b(system|subprocess)(_|-|call|exec|run)\b", "system command"),
+        (r"\beval(_|-|code|expression)\b", "code evaluation"),
+        (r"\bcompile(_|-|code|source)\b", "code compilation"),
     ]
 
-    # Medium-risk patterns
+    # Medium-risk patterns - more specific combinations
     medium_risk_patterns = [
-        ("write", "file write operations"),
-        ("delete", "file deletion"),
-        ("remove", "file removal"),
-        ("create", "file/resource creation"),
-        ("sql", "database operations"),
-        ("query", "database queries"),
-        ("connect", "network connections"),
-        ("fetch", "network requests"),
-        ("download", "file downloads"),
-        ("upload", "file uploads"),
-        ("auth", "authentication"),
-        ("credential", "credential handling"),
-        ("password", "password handling"),
-        ("token", "token handling"),
-        ("key", "key handling"),
+        (r"\b(write|create|save)(_|-|file|data)\b", "file write operations"),
+        (r"\b(delete|remove|unlink)(_|-|file|data)\b", "file deletion"),
+        (
+            r"\b(sql|database|db)(_|-|query|execute|run|connect)\b",
+            "database operations",
+        ),
+        (r"\b(fetch|request|download|get)(_|-|url|http|api|web)\b", "network requests"),
+        (r"\bupload(_|-|file|data)\b", "file uploads"),
+        (r"\b(auth|authenticate|login)(_|-|user)\b", "authentication"),
+        (
+            r"\b(credential|password|secret|token|key)(_|-|store|save|get|fetch)\b",
+            "credential handling",
+        ),
     ]
 
     # Check for high-risk patterns
     for pattern, risk_type in high_risk_patterns:
-        if pattern in combined:
+        if re.search(pattern, combined):
             risk_level = "high"
             warnings.append(
                 f"⚠️ HIGH RISK: Tool involves {risk_type}. "
@@ -127,7 +126,7 @@ def analyze_tool_security(tool_definition: Dict[str, Any]) -> Dict[str, Any]:
     # Check for medium-risk patterns
     if risk_level != "high":
         for pattern, risk_type in medium_risk_patterns:
-            if pattern in combined:
+            if re.search(pattern, combined):
                 risk_level = "medium"
                 warnings.append(
                     f"⚠️ MEDIUM RISK: Tool involves {risk_type}. "
