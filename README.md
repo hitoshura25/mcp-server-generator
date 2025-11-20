@@ -369,7 +369,57 @@ Create a `tools.json` file to define your MCP server's tools:
 - **[MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md)** - Detailed MCP server configuration guide
 - **[ASYNC_GUIDE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/ASYNC_GUIDE.md)** - Complete guide for using async/await in generated MCP servers
 - **[EXAMPLES.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/EXAMPLES.md)** - Example projects and use cases
+- **[SECURITY.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/SECURITY.md)** - **Security guidelines and best practices**
 - **[CONTRIBUTING.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/CONTRIBUTING.md)** - Development and contribution guidelines
+
+## Security
+
+🔒 **Important**: MCP servers can be exploited for malicious purposes if not properly secured. See [SECURITY.md](SECURITY.md) for comprehensive security guidelines.
+
+### Key Security Features
+
+Generated MCP servers include:
+
+- **Security utilities module** (`security_utils.py`) with ready-to-use functions for:
+  - Input validation and sanitization
+  - Path traversal protection
+  - Command injection prevention
+  - Rate limiting to prevent high-speed automated attacks
+  - Audit logging for security-relevant operations
+  - Sensitive data redaction (PII, credentials, API keys)
+
+- **Automated security analysis** - The generator analyzes your tool definitions and warns about:
+  - High-risk patterns (command execution, code evaluation)
+  - Medium-risk patterns (file operations, network access, credential handling)
+  - Recommendations for secure implementation
+
+- **Comprehensive security documentation** - Every generated project includes SECURITY.md with:
+  - Threat model based on real-world AI-orchestrated cyber espionage
+  - Secure coding patterns and examples
+  - Security checklist for deployment
+  - Incident response procedures
+
+### Best Practices
+
+When creating MCP servers:
+
+1. **Validate all inputs** - Use whitelists, not blacklists
+2. **Apply principle of least privilege** - Tools should do the minimum necessary
+3. **Implement rate limiting** - Protect against high-speed automated attacks
+4. **Add audit logging** - Track all security-relevant operations
+5. **Redact sensitive data** - Don't expose PII, credentials, or secrets
+6. **Use security utilities** - Leverage the built-in `security_utils.py` module
+
+### Threat Model
+
+MCP servers can be targeted for:
+- AI-orchestrated cyber espionage campaigns
+- Jailbreak attempts through task decomposition
+- High-speed reconnaissance and exploitation
+- Credential harvesting through tool chaining
+- Data exfiltration at scale
+
+**Reference**: [Anthropic's research on AI-orchestrated cyber espionage](https://www.anthropic.com/news/disrupting-AI-espionage)
 
 ## Testing
 

@@ -3,6 +3,7 @@ Core MCP server generation logic.
 """
 
 import os
+import re
 import keyword
 from datetime import datetime
 from pathlib import Path
@@ -60,6 +61,89 @@ def validate_tool_name(name: Optional[str]) -> bool:
         return False
 
     return True
+
+
+def analyze_tool_security(tool_definition: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Analyze a tool definition for potential security risks.
+
+    Args:
+        tool_definition: Tool definition to analyze
+
+    Returns:
+        dict with 'risk_level', 'warnings', and 'recommendations'
+    """
+    warnings = []
+    recommendations = []
+    risk_level = "low"
+
+    name = tool_definition.get("name", "").lower()
+    description = tool_definition.get("description", "").lower()
+    combined = f"{name} {description}"
+
+    # High-risk patterns - more specific to reduce false positives
+    # Using word boundaries and specific combinations
+    high_risk_patterns = [
+        (r"\b(execute|exec)(_|-|command|cmd|shell|process)\b", "command execution"),
+        (r"\bshell(_|-|exec|command|run)\b", "shell access"),
+        (r"\brun(_|-|command|cmd|shell|process)\b", "command execution"),
+        (r"\b(system|subprocess)(_|-|call|exec|run)\b", "system command"),
+        (r"\beval(_|-|code|expression)\b", "code evaluation"),
+        (r"\bcompile(_|-|code|source)\b", "code compilation"),
+    ]
+
+    # Medium-risk patterns - more specific combinations
+    medium_risk_patterns = [
+        (r"\b(write|create|save)(_|-|file|data)\b", "file write operations"),
+        (r"\b(delete|remove|unlink)(_|-|file|data)\b", "file deletion"),
+        (
+            r"\b(sql|database|db)(_|-|query|execute|run|connect)\b",
+            "database operations",
+        ),
+        (r"\b(fetch|request|download|get)(_|-|url|http|api|web)\b", "network requests"),
+        (r"\bupload(_|-|file|data)\b", "file uploads"),
+        (r"\b(auth|authenticate|login)(_|-|user)\b", "authentication"),
+        (
+            r"\b(credential|password|secret|token|key)(_|-|store|save|get|fetch)\b",
+            "credential handling",
+        ),
+    ]
+
+    # Check for high-risk patterns
+    for pattern, risk_type in high_risk_patterns:
+        if re.search(pattern, combined):
+            risk_level = "high"
+            warnings.append(
+                f"⚠️ HIGH RISK: Tool involves {risk_type}. "
+                "This could allow arbitrary code execution or system access."
+            )
+            recommendations.append(
+                f"For {risk_type}: Use strict whitelisting, input validation, "
+                "and never use shell=True for subprocess calls. "
+                "See SECURITY.md for secure implementation patterns."
+            )
+
+    # Check for medium-risk patterns
+    if risk_level != "high":
+        for pattern, risk_type in medium_risk_patterns:
+            if re.search(pattern, combined):
+                risk_level = "medium"
+                warnings.append(
+                    f"⚠️ MEDIUM RISK: Tool involves {risk_type}. "
+                    "Requires careful security implementation."
+                )
+                recommendations.append(
+                    f"For {risk_type}: Implement input validation, path traversal "
+                    "protection, rate limiting, and audit logging. "
+                    "See SECURITY.md for details."
+                )
+                break  # Only flag once for medium risk
+
+    return {
+        "risk_level": risk_level,
+        "warnings": warnings,
+        "recommendations": recommendations,
+    }
 
 
 def generate_tool_schema(tool_definition: Dict[str, Any]) -> Dict[str, Any]:
@@ -409,6 +493,48 @@ def generate_mcp_server(
     if not tools:
         raise ValueError("At least one tool must be defined.")
 
+    # Security analysis: Check for potentially dangerous tool patterns
+    print("\n" + "=" * 60)
+    print("SECURITY ANALYSIS")
+    print("=" * 60)
+
+    high_risk_tools = []
+    medium_risk_tools = []
+
+    for tool in tools:
+        analysis = analyze_tool_security(tool)
+        if analysis["risk_level"] == "high":
+            high_risk_tools.append((tool["name"], analysis))
+        elif analysis["risk_level"] == "medium":
+            medium_risk_tools.append((tool["name"], analysis))
+
+    if high_risk_tools:
+        print("\n🚨 HIGH RISK TOOLS DETECTED:")
+        for tool_name, analysis in high_risk_tools:
+            print(f"\n  Tool: {tool_name}")
+            for warning in analysis["warnings"]:
+                print(f"    {warning}")
+            for rec in analysis["recommendations"]:
+                print(f"    💡 {rec}")
+
+    if medium_risk_tools:
+        print("\n⚠️  MEDIUM RISK TOOLS DETECTED:")
+        for tool_name, analysis in medium_risk_tools:
+            print(f"\n  Tool: {tool_name}")
+            for warning in analysis["warnings"]:
+                print(f"    {warning}")
+            for rec in analysis["recommendations"]:
+                print(f"    💡 {rec}")
+
+    if high_risk_tools or medium_risk_tools:
+        print("\n📚 SECURITY RESOURCES:")
+        print(
+            "    - See SECURITY.md in your generated project for comprehensive guidelines"
+        )
+        print("    - Use security_utils.py for built-in security functions")
+        print("    - Review: https://www.anthropic.com/news/disrupting-AI-espionage")
+        print("=" * 60 + "\n")
+
     # Store original name
     base_name = project_name
 
@@ -523,6 +649,8 @@ def generate_mcp_server(
         # Root files
         ("README.md.j2", "README.md"),
         ("MCP-USAGE.md.j2", "MCP-USAGE.md"),
+        ("SECURITY.md.j2", "SECURITY.md"),
+        ("SECURITY_EXAMPLES.md.j2", "SECURITY_EXAMPLES.md"),
         ("LICENSE.j2", "LICENSE"),
         ("setup.py.j2", "setup.py"),
         ("pyproject.toml.j2", "pyproject.toml"),
@@ -533,6 +661,7 @@ def generate_mcp_server(
         ("server.py.j2", f"{package_name}/server.py"),
         ("cli.py.j2", f"{package_name}/cli.py"),
         ("generator.py.j2", f"{package_name}/generator.py"),
+        ("security_utils.py.j2", f"{package_name}/security_utils.py"),
         # Tests
         ("tests/__init__.py.j2", f"{package_name}/tests/__init__.py"),
         ("tests/test_server.py.j2", f"{package_name}/tests/test_server.py"),
