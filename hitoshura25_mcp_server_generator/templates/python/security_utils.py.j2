@@ -88,7 +88,9 @@ def validate_numeric_input(
     Raises:
         ValueError: If validation fails
     """
-    if not isinstance(value, int):
+    # Check for bool first (bool is a subclass of int in Python)
+    # isinstance(True, int) returns True, so we must explicitly reject booleans
+    if isinstance(value, bool) or not isinstance(value, int):
         raise ValueError(f"{field_name} must be an integer")
 
     if min_value is not None and value < min_value:
@@ -303,20 +305,32 @@ def audit_log(func):
     """
     Decorator to log all function calls for security auditing.
 
-    Logs function calls with parameters (excluding sensitive data markers)
-    and results/errors.
+    Logs function calls with parameters, automatically redacting sensitive
+    parameter names to prevent accidental disclosure of secrets.
 
     Example:
         @audit_log
         def my_tool(user_id: str, data: str) -> Dict[str, Any]:
-            # All calls will be logged
+            # All calls will be logged with sensitive params redacted
             pass
     """
+    # Parameter names that should never be logged
+    SENSITIVE_PARAM_NAMES = {
+        'password', 'token', 'api_key', 'secret', 'credential',
+        'auth', 'authorization', 'apikey', 'access_token',
+        'refresh_token', 'private_key', 'passphrase'
+    }
+
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Log the call (be careful not to log sensitive data)
-        safe_args = str(args)[:100]  # Truncate to avoid logging large data
-        safe_kwargs = str(kwargs)[:100]
+        # Redact sensitive parameter values
+        safe_kwargs = {
+            k: '[REDACTED]' if k.lower() in SENSITIVE_PARAM_NAMES else str(v)[:100]
+            for k, v in kwargs.items()
+        }
+
+        # Truncate args to avoid logging large data
+        safe_args = str(args)[:100]
 
         logger.info(f"Tool called: {func.__name__} args={safe_args} kwargs={safe_kwargs}")
 

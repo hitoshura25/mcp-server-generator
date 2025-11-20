@@ -356,33 +356,59 @@ def my_tool_with_pii(user_data: str) -> Dict[str, Any]:
 
 #### 6. Timeout Protection
 
+**For async operations (recommended)**:
 ```python
-import signal
-from contextlib import contextmanager
+import asyncio
 
-@contextmanager
-def timeout(seconds: int):
-    """Context manager to timeout long-running operations."""
-    def timeout_handler(signum, frame):
-        raise TimeoutError(f"Operation exceeded {seconds} seconds")
-
-    old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(seconds)
+async def potentially_slow_operation(data: str) -> Dict[str, Any]:
+    """Async operation with timeout (works on all platforms)."""
     try:
-        yield
-    finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old_handler)
-
-# Usage:
-def potentially_slow_operation(data: str) -> Dict[str, Any]:
-    try:
-        with timeout(30):  # 30 second timeout
-            result = expensive_computation(data)
-            return {'success': True, 'result': result}
-    except TimeoutError:
+        result = await asyncio.wait_for(
+            expensive_async_computation(data),
+            timeout=30.0  # 30 second timeout
+        )
+        return {'success': True, 'result': result}
+    except asyncio.TimeoutError:
         return {'success': False, 'error': 'Operation timed out'}
 ```
+
+**For synchronous operations with threading**:
+```python
+import threading
+from typing import Dict, Any, Optional
+
+def potentially_slow_operation(data: str) -> Dict[str, Any]:
+    """
+    Synchronous operation with timeout using threading.
+
+    Cross-platform compatible (works on Windows and Unix).
+    Thread-safe alternative to signal.SIGALRM.
+    """
+    result_container = {'result': None, 'error': None}
+
+    def worker():
+        try:
+            result_container['result'] = expensive_computation(data)
+        except Exception as e:
+            result_container['error'] = str(e)
+
+    thread = threading.Thread(target=worker)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout=30.0)  # 30 second timeout
+
+    if thread.is_alive():
+        # Thread is still running - timeout occurred
+        # Note: thread will continue running in background
+        return {'success': False, 'error': 'Operation timed out'}
+
+    if result_container['error']:
+        return {'success': False, 'error': result_container['error']}
+
+    return {'success': True, 'result': result_container['result']}
+```
+
+**Note**: The `signal.SIGALRM` approach only works on Unix-like systems, is not thread-safe, and doesn't work with async code. For production code, use `asyncio.wait_for()` for async operations or the threading approach for synchronous code.
 
 ## Security Best Practices
 
