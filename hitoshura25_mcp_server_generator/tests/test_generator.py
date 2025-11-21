@@ -860,6 +860,108 @@ def test_package_only_includes_package_code(tmp_path):
         os.chdir(original_dir)
 
 
+def test_build_with_custom_output_dir(tmp_path):
+    """Test that project builds successfully when generated in a subdirectory."""
+    original_dir = os.getcwd()
+
+    try:
+        # Generate project in a subdirectory (not ".")
+        result = generate_mcp_server(
+            project_name="test-custom-dir",
+            description="Test custom output directory",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[{"name": "test_tool", "description": "Test", "parameters": []}],
+            output_dir=str(tmp_path),  # Generate in specified directory
+            prefix="NONE",
+        )
+
+        assert result["success"]
+        project_dir = tmp_path / "test-custom-dir"
+        assert project_dir.exists()
+
+        os.chdir(project_dir)
+
+        # Initialize git in the project directory
+        subprocess.run(
+            ["git", "init"], cwd=project_dir, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=project_dir,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=project_dir,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "commit.gpgsign", "false"],
+            cwd=project_dir,
+            capture_output=True,
+            check=True,
+        )
+
+        # Add some directories at the project level (to verify they're excluded)
+        (project_dir / "specs").mkdir(exist_ok=True)
+        (project_dir / "specs" / "spec.md").write_text("# Spec")
+        (project_dir / "docs").mkdir(exist_ok=True)
+        (project_dir / "docs" / "guide.md").write_text("# Guide")
+
+        # Commit and tag
+        subprocess.run(
+            ["git", "add", "."], cwd=project_dir, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "commit", "--no-verify", "-m", "Initial commit"],
+            cwd=project_dir,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "tag", "0.1.0"], cwd=project_dir, capture_output=True, check=True
+        )
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project from the subdirectory
+        build_result = subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+        )
+
+        # Verify build succeeded
+        assert build_result.returncode == 0, (
+            f"Build failed in subdirectory: {build_result.stderr}"
+        )
+        assert (project_dir / "dist").exists()
+
+        # Verify only the package is included
+        wheel_files = list((project_dir / "dist").glob("*.whl"))
+        assert len(wheel_files) > 0, "No wheel file created"
+        with zipfile.ZipFile(wheel_files[0], "r") as z:
+            names = z.namelist()
+
+        # Package should be included
+        assert any("test_custom_dir/" in n for n in names), "Package not in wheel"
+        # Extra directories should NOT be included
+        assert not any("specs/" in n for n in names), "specs/ should be excluded"
+        assert not any("docs/" in n for n in names), "docs/ should be excluded"
+
+    finally:
+        os.chdir(original_dir)
+
+
 def test_github_url_with_spaces_in_author(tmp_path):
     """Test that GitHub URLs are properly sanitized when author name has spaces."""
     original_dir = os.getcwd()
