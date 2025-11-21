@@ -8,17 +8,6 @@ version_scheme = "post-release"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["{{ package_name }}*"]
-exclude = [
-    "tests*",
-    "docs*",
-    "examples*",
-    "specs*",
-    "scripts*",
-    ".github*",
-    ".workflow-context*",
-    ".claude*",
-    "*.egg-info",
-]
 
 [project]
 name = "{{ project_name }}"

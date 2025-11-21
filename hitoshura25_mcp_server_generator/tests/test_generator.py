@@ -615,7 +615,9 @@ def test_generated_project_builds(tmp_path):
         )
 
         # Commit files and create tag for setuptools_scm
-        subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=tmp_path, capture_output=True, check=True
+        )
         subprocess.run(
             ["git", "commit", "--no-verify", "-m", "Initial commit"],
             cwd=tmp_path,
@@ -649,7 +651,9 @@ def test_generated_project_builds(tmp_path):
         dist_files = list((tmp_path / "dist").iterdir())
         assert len(dist_files) > 0, "No distribution files created"
         assert any(f.suffix == ".whl" for f in dist_files), "No wheel file created"
-        assert any(f.suffix == ".gz" for f in dist_files), "No source distribution created"
+        assert any(f.suffix == ".gz" for f in dist_files), (
+            "No source distribution created"
+        )
 
     finally:
         os.chdir(original_dir)
@@ -717,7 +721,9 @@ def test_build_with_additional_directories(tmp_path):
         )
 
         # Commit files and create tag for setuptools_scm
-        subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=tmp_path, capture_output=True, check=True
+        )
         subprocess.run(
             ["git", "commit", "--no-verify", "-m", "Initial commit"],
             cwd=tmp_path,
@@ -744,9 +750,9 @@ def test_build_with_additional_directories(tmp_path):
         )
 
         # Verify build succeeded
-        assert (
-            build_result.returncode == 0
-        ), f"Build failed with additional directories: {build_result.stderr}"
+        assert build_result.returncode == 0, (
+            f"Build failed with additional directories: {build_result.stderr}"
+        )
         assert (tmp_path / "dist").exists()
 
     finally:
@@ -803,7 +809,9 @@ def test_package_only_includes_package_code(tmp_path):
         )
 
         # Commit files and create tag for setuptools_scm
-        subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=tmp_path, capture_output=True, check=True
+        )
         subprocess.run(
             ["git", "commit", "--no-verify", "-m", "Initial commit"],
             cwd=tmp_path,
@@ -839,9 +847,9 @@ def test_package_only_includes_package_code(tmp_path):
             names = z.namelist()
 
         # Should include the package
-        assert any(
-            "test_package_contents/" in n for n in names
-        ), "Package not found in wheel"
+        assert any("test_package_contents/" in n for n in names), (
+            "Package not found in wheel"
+        )
 
         # Should NOT include excluded directories
         assert not any("specs/" in n for n in names), "specs/ should be excluded"
@@ -878,9 +886,10 @@ def test_github_url_with_spaces_in_author(tmp_path):
         assert "github.com/john-q-public/" in pyproject_content, (
             "GitHub URL should be sanitized (spaces replaced with hyphens)"
         )
-        assert "John Q. Public" not in pyproject_content.split("[project.urls]")[1].split("\n")[0:4], (
-            "Raw author name with spaces should not appear in URLs section"
-        )
+        assert (
+            "John Q. Public"
+            not in pyproject_content.split("[project.urls]")[1].split("\n")[0:4]
+        ), "Raw author name with spaces should not appear in URLs section"
 
     finally:
         os.chdir(original_dir)
