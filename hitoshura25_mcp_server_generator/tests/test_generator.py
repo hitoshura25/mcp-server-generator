@@ -4,6 +4,10 @@ Tests for core generation logic.
 
 import pytest
 import os
+import subprocess
+import sys
+import zipfile
+from pathlib import Path
 from hitoshura25_mcp_server_generator.generator import (
     validate_project_name,
     validate_tool_name,
@@ -11,6 +15,52 @@ from hitoshura25_mcp_server_generator.generator import (
     sanitize_description,
     generate_mcp_server,
 )
+
+
+def setup_git_repo(repo_path: Path) -> None:
+    """
+    Initialize a git repository with test configuration.
+
+    Args:
+        repo_path: Path to the directory to initialize as a git repo
+    """
+    subprocess.run(["git", "init"], cwd=repo_path, capture_output=True, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "commit.gpgsign", "false"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+
+
+def commit_and_tag(repo_path: Path, tag: str = "0.1.0") -> None:
+    """
+    Commit all changes and create a tag (for setuptools_scm).
+
+    Args:
+        repo_path: Path to the git repository
+        tag: Version tag to create
+    """
+    subprocess.run(["git", "add", "."], cwd=repo_path, capture_output=True, check=True)
+    subprocess.run(
+        ["git", "commit", "--no-verify", "-m", "Initial commit"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(["git", "tag", tag], cwd=repo_path, capture_output=True, check=True)
 
 
 def test_validate_project_name_valid():
@@ -552,5 +602,333 @@ def test_generate_errors_on_critical_files(tmp_path):
                 output_dir=".",
                 prefix="NONE",
             )
+    finally:
+        os.chdir(original_dir)
+
+
+def test_generated_project_builds(tmp_path):
+    """Test that a generated project can be built successfully."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Initialize git repo for setuptools_scm
+        setup_git_repo(tmp_path)
+
+        # Generate a basic project
+        result = generate_mcp_server(
+            project_name="test-build-project",
+            description="Test build project",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[
+                {
+                    "name": "test_tool",
+                    "description": "A test tool",
+                    "parameters": [
+                        {
+                            "name": "param1",
+                            "type": "string",
+                            "description": "Test parameter",
+                            "required": True,
+                        }
+                    ],
+                }
+            ],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Commit files and create tag for setuptools_scm
+        commit_and_tag(tmp_path)
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project
+        build_result = subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        # Verify build succeeded
+        assert build_result.returncode == 0, f"Build failed: {build_result.stderr}"
+        assert (tmp_path / "dist").exists()
+
+        # Verify distribution files were created
+        dist_files = list((tmp_path / "dist").iterdir())
+        assert len(dist_files) > 0, "No distribution files created"
+        assert any(f.suffix == ".whl" for f in dist_files), "No wheel file created"
+        assert any(f.suffix == ".gz" for f in dist_files), (
+            "No source distribution created"
+        )
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_build_with_additional_directories(tmp_path):
+    """Test that project builds successfully even with additional directories."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Initialize git repo for setuptools_scm
+        setup_git_repo(tmp_path)
+
+        # Generate a basic project
+        result = generate_mcp_server(
+            project_name="test-extra-dirs",
+            description="Test with extra directories",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[
+                {
+                    "name": "calculate",
+                    "description": "Calculate something",
+                    "parameters": [],
+                }
+            ],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Add common directories that should be excluded
+        # Note: Using exist_ok=True for defensive programming since
+        # the generator might create some of these (e.g., scripts/)
+        (tmp_path / "specs").mkdir(exist_ok=True)
+        (tmp_path / "specs" / "implementation.md").write_text("# Implementation Spec")
+
+        (tmp_path / "docs").mkdir(exist_ok=True)
+        (tmp_path / "docs" / "guide.md").write_text("# User Guide")
+
+        (tmp_path / "examples").mkdir(exist_ok=True)
+        (tmp_path / "examples" / "example.py").write_text("# Example usage")
+
+        (tmp_path / "scripts").mkdir(exist_ok=True)
+        (tmp_path / "scripts" / "deploy.sh").write_text("#!/bin/bash\necho 'deploy'")
+
+        # Commit files and create tag for setuptools_scm
+        commit_and_tag(tmp_path)
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project
+        build_result = subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        # Verify build succeeded
+        assert build_result.returncode == 0, (
+            f"Build failed with additional directories: {build_result.stderr}"
+        )
+        assert (tmp_path / "dist").exists()
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_package_only_includes_package_code(tmp_path):
+    """Test that built distribution only includes the package, not extra directories."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Initialize git repo for setuptools_scm
+        setup_git_repo(tmp_path)
+
+        # Generate project
+        result = generate_mcp_server(
+            project_name="test-package-contents",
+            description="Test package contents",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[{"name": "test_func", "description": "Test", "parameters": []}],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Add custom directories that should be excluded
+        # These are not created by the generator, so no exist_ok needed
+        (tmp_path / "specs").mkdir()
+        (tmp_path / "specs" / "secret.txt").write_text("Should not be in package")
+
+        (tmp_path / "private").mkdir()
+        (tmp_path / "private" / "credentials.json").write_text('{"key": "secret"}')
+
+        # Commit files and create tag for setuptools_scm
+        commit_and_tag(tmp_path)
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project
+        subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+        )
+
+        # Find the wheel file
+        wheel_files = list((tmp_path / "dist").glob("*.whl"))
+        assert len(wheel_files) > 0, "No wheel file created"
+        wheel_file = wheel_files[0]
+
+        # Extract and verify contents
+        with zipfile.ZipFile(wheel_file, "r") as z:
+            names = z.namelist()
+
+        # Should include the package
+        assert any("test_package_contents/" in n for n in names), (
+            "Package not found in wheel"
+        )
+
+        # Should NOT include excluded directories
+        assert not any("specs/" in n for n in names), "specs/ should be excluded"
+        assert not any("private/" in n for n in names), "private/ should be excluded"
+        assert not any("examples/" in n for n in names), "examples/ should be excluded"
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_build_with_custom_output_dir(tmp_path):
+    """Test that project builds successfully when generated in a subdirectory."""
+    original_dir = os.getcwd()
+
+    try:
+        # Generate project in a subdirectory (not ".")
+        result = generate_mcp_server(
+            project_name="test-custom-dir",
+            description="Test custom output directory",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[{"name": "test_tool", "description": "Test", "parameters": []}],
+            output_dir=str(tmp_path),  # Generate in specified directory
+            prefix="NONE",
+        )
+
+        assert result["success"]
+        project_dir = tmp_path / "test-custom-dir"
+        assert project_dir.exists()
+
+        os.chdir(project_dir)
+
+        # Initialize git in the project directory
+        setup_git_repo(project_dir)
+
+        # Add some directories at the project level (to verify they're excluded)
+        # Using exist_ok=True since generator might create some directories
+        (project_dir / "specs").mkdir(exist_ok=True)
+        (project_dir / "specs" / "spec.md").write_text("# Spec")
+        (project_dir / "docs").mkdir(exist_ok=True)
+        (project_dir / "docs" / "guide.md").write_text("# Guide")
+
+        # Commit and tag
+        commit_and_tag(project_dir)
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project from the subdirectory
+        build_result = subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+        )
+
+        # Verify build succeeded
+        assert build_result.returncode == 0, (
+            f"Build failed in subdirectory: {build_result.stderr}"
+        )
+        assert (project_dir / "dist").exists()
+
+        # Verify only the package is included
+        wheel_files = list((project_dir / "dist").glob("*.whl"))
+        assert len(wheel_files) > 0, "No wheel file created"
+        with zipfile.ZipFile(wheel_files[0], "r") as z:
+            names = z.namelist()
+
+        # Package should be included
+        assert any("test_custom_dir/" in n for n in names), "Package not in wheel"
+        # Extra directories should NOT be included
+        assert not any("specs/" in n for n in names), "specs/ should be excluded"
+        assert not any("docs/" in n for n in names), "docs/ should be excluded"
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_github_url_with_spaces_in_author(tmp_path):
+    """Test that GitHub URLs are properly sanitized when author name has spaces."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Generate project with author name containing spaces
+        result = generate_mcp_server(
+            project_name="test-url-sanitization",
+            description="Test URL sanitization",
+            author="John Q. Public",
+            author_email="john@example.com",
+            tools=[{"name": "test_tool", "description": "Test", "parameters": []}],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Read the generated pyproject.toml
+        pyproject_content = (tmp_path / "pyproject.toml").read_text()
+
+        # Verify all GitHub URLs are sanitized (no spaces, dots replaced with hyphens)
+        assert (
+            'Homepage = "https://github.com/john-q-public/test-url-sanitization"'
+            in pyproject_content
+        ), "Homepage URL should be sanitized"
+        assert (
+            'Repository = "https://github.com/john-q-public/test-url-sanitization"'
+            in pyproject_content
+        ), "Repository URL should be sanitized"
+        assert (
+            'Issues = "https://github.com/john-q-public/test-url-sanitization/issues"'
+            in pyproject_content
+        ), "Issues URL should be sanitized"
+
+        # Verify the original author name is preserved in the authors field
+        assert '{name = "John Q. Public"' in pyproject_content, (
+            "Original author name should be preserved in authors field"
+        )
+
     finally:
         os.chdir(original_dir)

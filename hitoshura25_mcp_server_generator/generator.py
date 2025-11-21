@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from jinja2 import Environment, FileSystemLoader
-from .git_utils import apply_prefix
+from .git_utils import apply_prefix, sanitize_username
 
 
 def validate_project_name(name: Optional[str]) -> bool:
@@ -633,6 +633,7 @@ def generate_mcp_server(
         "base_name": base_name,  # Original name without prefix (e.g., "my-tool")
         "description": sanitize_description(description),
         "author": author,
+        "author_github": sanitize_username(author),  # Sanitized for GitHub URLs
         "author_email": author_email,
         "python_version": validated_python_version,
         "license": license_type,
