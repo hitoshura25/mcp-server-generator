@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import zipfile
+from pathlib import Path
 from hitoshura25_mcp_server_generator.generator import (
     validate_project_name,
     validate_tool_name,
@@ -14,6 +15,52 @@ from hitoshura25_mcp_server_generator.generator import (
     sanitize_description,
     generate_mcp_server,
 )
+
+
+def setup_git_repo(repo_path: Path) -> None:
+    """
+    Initialize a git repository with test configuration.
+
+    Args:
+        repo_path: Path to the directory to initialize as a git repo
+    """
+    subprocess.run(["git", "init"], cwd=repo_path, capture_output=True, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "commit.gpgsign", "false"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+
+
+def commit_and_tag(repo_path: Path, tag: str = "0.1.0") -> None:
+    """
+    Commit all changes and create a tag (for setuptools_scm).
+
+    Args:
+        repo_path: Path to the git repository
+        tag: Version tag to create
+    """
+    subprocess.run(["git", "add", "."], cwd=repo_path, capture_output=True, check=True)
+    subprocess.run(
+        ["git", "commit", "--no-verify", "-m", "Initial commit"],
+        cwd=repo_path,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(["git", "tag", tag], cwd=repo_path, capture_output=True, check=True)
 
 
 def test_validate_project_name_valid():
@@ -566,19 +613,7 @@ def test_generated_project_builds(tmp_path):
 
     try:
         # Initialize git repo for setuptools_scm
-        subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
-        subprocess.run(
-            ["git", "config", "user.email", "test@example.com"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
+        setup_git_repo(tmp_path)
 
         # Generate a basic project
         result = generate_mcp_server(
@@ -606,27 +641,8 @@ def test_generated_project_builds(tmp_path):
 
         assert result["success"]
 
-        # Disable gpg signing for test commits
-        subprocess.run(
-            ["git", "config", "commit.gpgsign", "false"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-
         # Commit files and create tag for setuptools_scm
-        subprocess.run(
-            ["git", "add", "."], cwd=tmp_path, capture_output=True, check=True
-        )
-        subprocess.run(
-            ["git", "commit", "--no-verify", "-m", "Initial commit"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "tag", "0.1.0"], cwd=tmp_path, capture_output=True, check=True
-        )
+        commit_and_tag(tmp_path)
 
         # Install build dependencies
         subprocess.run(
@@ -666,19 +682,7 @@ def test_build_with_additional_directories(tmp_path):
 
     try:
         # Initialize git repo for setuptools_scm
-        subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
-        subprocess.run(
-            ["git", "config", "user.email", "test@example.com"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
+        setup_git_repo(tmp_path)
 
         # Generate a basic project
         result = generate_mcp_server(
@@ -699,7 +703,9 @@ def test_build_with_additional_directories(tmp_path):
 
         assert result["success"]
 
-        # Add common directories that should be excluded (use exist_ok for scripts)
+        # Add common directories that should be excluded
+        # Note: Using exist_ok=True for defensive programming since
+        # the generator might create some of these (e.g., scripts/)
         (tmp_path / "specs").mkdir(exist_ok=True)
         (tmp_path / "specs" / "implementation.md").write_text("# Implementation Spec")
 
@@ -712,27 +718,8 @@ def test_build_with_additional_directories(tmp_path):
         (tmp_path / "scripts").mkdir(exist_ok=True)
         (tmp_path / "scripts" / "deploy.sh").write_text("#!/bin/bash\necho 'deploy'")
 
-        # Disable gpg signing for test commits
-        subprocess.run(
-            ["git", "config", "commit.gpgsign", "false"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-
         # Commit files and create tag for setuptools_scm
-        subprocess.run(
-            ["git", "add", "."], cwd=tmp_path, capture_output=True, check=True
-        )
-        subprocess.run(
-            ["git", "commit", "--no-verify", "-m", "Initial commit"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "tag", "0.1.0"], cwd=tmp_path, capture_output=True, check=True
-        )
+        commit_and_tag(tmp_path)
 
         # Install build dependencies
         subprocess.run(
@@ -766,19 +753,7 @@ def test_package_only_includes_package_code(tmp_path):
 
     try:
         # Initialize git repo for setuptools_scm
-        subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
-        subprocess.run(
-            ["git", "config", "user.email", "test@example.com"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
+        setup_git_repo(tmp_path)
 
         # Generate project
         result = generate_mcp_server(
@@ -793,34 +768,16 @@ def test_package_only_includes_package_code(tmp_path):
 
         assert result["success"]
 
-        # Add directories that should be excluded
-        (tmp_path / "specs").mkdir(exist_ok=True)
+        # Add custom directories that should be excluded
+        # These are not created by the generator, so no exist_ok needed
+        (tmp_path / "specs").mkdir()
         (tmp_path / "specs" / "secret.txt").write_text("Should not be in package")
 
         (tmp_path / "private").mkdir()
         (tmp_path / "private" / "credentials.json").write_text('{"key": "secret"}')
 
-        # Disable gpg signing for test commits
-        subprocess.run(
-            ["git", "config", "commit.gpgsign", "false"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-
         # Commit files and create tag for setuptools_scm
-        subprocess.run(
-            ["git", "add", "."], cwd=tmp_path, capture_output=True, check=True
-        )
-        subprocess.run(
-            ["git", "commit", "--no-verify", "-m", "Initial commit"],
-            cwd=tmp_path,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "tag", "0.1.0"], cwd=tmp_path, capture_output=True, check=True
-        )
+        commit_and_tag(tmp_path)
 
         # Install build dependencies
         subprocess.run(
@@ -883,47 +840,17 @@ def test_build_with_custom_output_dir(tmp_path):
         os.chdir(project_dir)
 
         # Initialize git in the project directory
-        subprocess.run(
-            ["git", "init"], cwd=project_dir, capture_output=True, check=True
-        )
-        subprocess.run(
-            ["git", "config", "user.email", "test@example.com"],
-            cwd=project_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"],
-            cwd=project_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "commit.gpgsign", "false"],
-            cwd=project_dir,
-            capture_output=True,
-            check=True,
-        )
+        setup_git_repo(project_dir)
 
         # Add some directories at the project level (to verify they're excluded)
+        # Using exist_ok=True since generator might create some directories
         (project_dir / "specs").mkdir(exist_ok=True)
         (project_dir / "specs" / "spec.md").write_text("# Spec")
         (project_dir / "docs").mkdir(exist_ok=True)
         (project_dir / "docs" / "guide.md").write_text("# Guide")
 
         # Commit and tag
-        subprocess.run(
-            ["git", "add", "."], cwd=project_dir, capture_output=True, check=True
-        )
-        subprocess.run(
-            ["git", "commit", "--no-verify", "-m", "Initial commit"],
-            cwd=project_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "tag", "0.1.0"], cwd=project_dir, capture_output=True, check=True
-        )
+        commit_and_tag(project_dir)
 
         # Install build dependencies
         subprocess.run(
@@ -984,14 +911,24 @@ def test_github_url_with_spaces_in_author(tmp_path):
         # Read the generated pyproject.toml
         pyproject_content = (tmp_path / "pyproject.toml").read_text()
 
-        # Verify URLs don't contain spaces
-        assert "github.com/john-q-public/" in pyproject_content, (
-            "GitHub URL should be sanitized (spaces replaced with hyphens)"
-        )
+        # Verify all GitHub URLs are sanitized (no spaces, dots replaced with hyphens)
         assert (
-            "John Q. Public"
-            not in pyproject_content.split("[project.urls]")[1].split("\n")[0:4]
-        ), "Raw author name with spaces should not appear in URLs section"
+            'Homepage = "https://github.com/john-q-public/test-url-sanitization"'
+            in pyproject_content
+        ), "Homepage URL should be sanitized"
+        assert (
+            'Repository = "https://github.com/john-q-public/test-url-sanitization"'
+            in pyproject_content
+        ), "Repository URL should be sanitized"
+        assert (
+            'Issues = "https://github.com/john-q-public/test-url-sanitization/issues"'
+            in pyproject_content
+        ), "Issues URL should be sanitized"
+
+        # Verify the original author name is preserved in the authors field
+        assert '{name = "John Q. Public"' in pyproject_content, (
+            "Original author name should be preserved in authors field"
+        )
 
     finally:
         os.chdir(original_dir)
