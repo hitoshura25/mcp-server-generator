@@ -4,6 +4,9 @@ Tests for core generation logic.
 
 import pytest
 import os
+import subprocess
+import sys
+import zipfile
 from hitoshura25_mcp_server_generator.generator import (
     validate_project_name,
     validate_tool_name,
@@ -552,5 +555,332 @@ def test_generate_errors_on_critical_files(tmp_path):
                 output_dir=".",
                 prefix="NONE",
             )
+    finally:
+        os.chdir(original_dir)
+
+
+def test_generated_project_builds(tmp_path):
+    """Test that a generated project can be built successfully."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Initialize git repo for setuptools_scm
+        subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+
+        # Generate a basic project
+        result = generate_mcp_server(
+            project_name="test-build-project",
+            description="Test build project",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[
+                {
+                    "name": "test_tool",
+                    "description": "A test tool",
+                    "parameters": [
+                        {
+                            "name": "param1",
+                            "type": "string",
+                            "description": "Test parameter",
+                            "required": True,
+                        }
+                    ],
+                }
+            ],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Disable gpg signing for test commits
+        subprocess.run(
+            ["git", "config", "commit.gpgsign", "false"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+
+        # Commit files and create tag for setuptools_scm
+        subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "--no-verify", "-m", "Initial commit"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "tag", "0.1.0"], cwd=tmp_path, capture_output=True, check=True
+        )
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project
+        build_result = subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        # Verify build succeeded
+        assert build_result.returncode == 0, f"Build failed: {build_result.stderr}"
+        assert (tmp_path / "dist").exists()
+
+        # Verify distribution files were created
+        dist_files = list((tmp_path / "dist").iterdir())
+        assert len(dist_files) > 0, "No distribution files created"
+        assert any(f.suffix == ".whl" for f in dist_files), "No wheel file created"
+        assert any(f.suffix == ".gz" for f in dist_files), "No source distribution created"
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_build_with_additional_directories(tmp_path):
+    """Test that project builds successfully even with additional directories."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Initialize git repo for setuptools_scm
+        subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+
+        # Generate a basic project
+        result = generate_mcp_server(
+            project_name="test-extra-dirs",
+            description="Test with extra directories",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[
+                {
+                    "name": "calculate",
+                    "description": "Calculate something",
+                    "parameters": [],
+                }
+            ],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Add common directories that should be excluded (use exist_ok for scripts)
+        (tmp_path / "specs").mkdir(exist_ok=True)
+        (tmp_path / "specs" / "implementation.md").write_text("# Implementation Spec")
+
+        (tmp_path / "docs").mkdir(exist_ok=True)
+        (tmp_path / "docs" / "guide.md").write_text("# User Guide")
+
+        (tmp_path / "examples").mkdir(exist_ok=True)
+        (tmp_path / "examples" / "example.py").write_text("# Example usage")
+
+        (tmp_path / "scripts").mkdir(exist_ok=True)
+        (tmp_path / "scripts" / "deploy.sh").write_text("#!/bin/bash\necho 'deploy'")
+
+        # Disable gpg signing for test commits
+        subprocess.run(
+            ["git", "config", "commit.gpgsign", "false"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+
+        # Commit files and create tag for setuptools_scm
+        subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "--no-verify", "-m", "Initial commit"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "tag", "0.1.0"], cwd=tmp_path, capture_output=True, check=True
+        )
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project
+        build_result = subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        # Verify build succeeded
+        assert (
+            build_result.returncode == 0
+        ), f"Build failed with additional directories: {build_result.stderr}"
+        assert (tmp_path / "dist").exists()
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_package_only_includes_package_code(tmp_path):
+    """Test that built distribution only includes the package, not extra directories."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Initialize git repo for setuptools_scm
+        subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+
+        # Generate project
+        result = generate_mcp_server(
+            project_name="test-package-contents",
+            description="Test package contents",
+            author="Test Author",
+            author_email="test@example.com",
+            tools=[{"name": "test_func", "description": "Test", "parameters": []}],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Add directories that should be excluded
+        (tmp_path / "specs").mkdir(exist_ok=True)
+        (tmp_path / "specs" / "secret.txt").write_text("Should not be in package")
+
+        (tmp_path / "private").mkdir()
+        (tmp_path / "private" / "credentials.json").write_text('{"key": "secret"}')
+
+        # Disable gpg signing for test commits
+        subprocess.run(
+            ["git", "config", "commit.gpgsign", "false"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+
+        # Commit files and create tag for setuptools_scm
+        subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "--no-verify", "-m", "Initial commit"],
+            cwd=tmp_path,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "tag", "0.1.0"], cwd=tmp_path, capture_output=True, check=True
+        )
+
+        # Install build dependencies
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "build"],
+            check=True,
+            capture_output=True,
+        )
+
+        # Build the project
+        subprocess.run(
+            [sys.executable, "-m", "build"],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+        )
+
+        # Find the wheel file
+        wheel_files = list((tmp_path / "dist").glob("*.whl"))
+        assert len(wheel_files) > 0, "No wheel file created"
+        wheel_file = wheel_files[0]
+
+        # Extract and verify contents
+        with zipfile.ZipFile(wheel_file, "r") as z:
+            names = z.namelist()
+
+        # Should include the package
+        assert any(
+            "test_package_contents/" in n for n in names
+        ), "Package not found in wheel"
+
+        # Should NOT include excluded directories
+        assert not any("specs/" in n for n in names), "specs/ should be excluded"
+        assert not any("private/" in n for n in names), "private/ should be excluded"
+        assert not any("examples/" in n for n in names), "examples/ should be excluded"
+
+    finally:
+        os.chdir(original_dir)
+
+
+def test_github_url_with_spaces_in_author(tmp_path):
+    """Test that GitHub URLs are properly sanitized when author name has spaces."""
+    original_dir = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Generate project with author name containing spaces
+        result = generate_mcp_server(
+            project_name="test-url-sanitization",
+            description="Test URL sanitization",
+            author="John Q. Public",
+            author_email="john@example.com",
+            tools=[{"name": "test_tool", "description": "Test", "parameters": []}],
+            output_dir=".",
+            prefix="NONE",
+        )
+
+        assert result["success"]
+
+        # Read the generated pyproject.toml
+        pyproject_content = (tmp_path / "pyproject.toml").read_text()
+
+        # Verify URLs don't contain spaces
+        assert "github.com/john-q-public/" in pyproject_content, (
+            "GitHub URL should be sanitized (spaces replaced with hyphens)"
+        )
+        assert "John Q. Public" not in pyproject_content.split("[project.urls]")[1].split("\n")[0:4], (
+            "Raw author name with spaces should not appear in URLs section"
+        )
+
     finally:
         os.chdir(original_dir)
